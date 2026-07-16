@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.herwaycabs</groupId>
+    <artifactId>microservices-aggregator</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>microservices-aggregator</name>
+    <description>Aggregator for HerWayCabs Microservices</description>
+    
+    <modules>
+        <module>api-gateway</module>
+        <module>auth-service</module>
+        <module>booking-service</module>
+        <module>driver-service</module>
+        <module>payment-service</module>
+        <module>kyc-service</module>
+        <module>discovery-server</module>
+    </modules>
+</project>

@@ -1,0 +1,5 @@
+CREATE DATABASE auth_db;
+CREATE DATABASE booking_db;
+CREATE DATABASE payment_db;
+CREATE DATABASE driver_db;
+CREATE DATABASE kyc_db;

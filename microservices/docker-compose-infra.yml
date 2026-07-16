@@ -1,0 +1,69 @@
+services:
+  # 1. Database (PostgreSQL)
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - cab-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M # Hard cap to save RAM
+
+  # 2. Key-Value Store (Redis)
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - cab-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  # 3. Message Broker (RabbitMQ)
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    networks:
+      - cab-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # 4. Tracing (Zipkin) - Optional, can comment out if remarkably tight on RAM
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - cab-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+networks:
+  cab-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
