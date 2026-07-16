@@ -1,0 +1,72 @@
+# --- Polyglot Project Ignored Files ---
+
+# 1. OS & IDE System Files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.iml
+.classpath
+.project
+.settings/
+
+# 2. Application Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 3. User Data (Uploads kept in repo as per user request)
+# uploads/  <-- COMMENTED OUT TO INCLUDE ON GITHUB
+tmp/
+
+# --- Local Documentation (Ignored) ---
+github_setup_guide.md
+ide_setup_guide.md
+interview_prep.md
+manual_startup_guide.md
+project_diagrams.md
+database_schema.md
+walkthrough.md
+microservices_setup_guide.md
+microservices_manual_run.md
+verification_guide.md
+minimal_run_guide.md
+diagram_images/
+run_microservices.bat
+verify_kyc_flow.ps1
+presentation_script.md
+target/
+*.class
+.mvn/
+*.jar
+*.war
+*.ear
+help.md
+
+# 5. Node.js / React (Frontend)
+node_modules/
+dist/
+build/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+coverage/
+
+# 6. .NET / C# (Admin Portal)
+bin/
+obj/
+*.user
+appsettings.Development.json
+*.pdb
+*.cache
+
+# 7. Other build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
