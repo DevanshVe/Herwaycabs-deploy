@@ -20,17 +20,17 @@ spring:
 
   data:
     redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
 
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_URL}
+      defaultZone: ${EUREKA_URL:https://herwaycabs-discovery.onrender.com/eureka/}
 
   instance:
-    prefer-ip-address: true
+    prefer-ip-address: false
 
 management:
   endpoints:
@@ -46,4 +46,3 @@ logging:
   level:
     root: INFO
     com.herwaycabs: INFO
-    org.hibernate: INFO
