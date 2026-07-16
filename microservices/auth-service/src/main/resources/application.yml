@@ -18,13 +18,17 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_URL}
+      defaultZone: ${EUREKA_URL:https://herwaycabs-discovery.onrender.com/eureka}
 
   instance:
-    prefer-ip-address: true
+    prefer-ip-address: false
 
 jwt:
   secret: ${JWT_SECRET}
@@ -44,4 +48,3 @@ logging:
   level:
     root: INFO
     com.herwaycabs: INFO
-    org.hibernate: INFO
