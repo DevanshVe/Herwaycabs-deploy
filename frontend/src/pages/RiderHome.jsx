@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useAuth } from '../context/AuthContext';
 import { bookingService } from '../services/api';
@@ -147,6 +147,20 @@ const RiderHome = () => {
         }
     };
 
+    const handleCancelRide = async () => {
+        if (!ride) return;
+        if (!window.confirm('Cancel this ride request?')) return;
+        try {
+            await bookingService.cancelRide(ride.id);
+            setRide(null);
+            setPickup('');
+            setDrop('');
+        } catch (error) {
+            console.error(error);
+            alert('Could not cancel the ride. Please try again.');
+        }
+    };
+
     return (
         <div className="h-screen flex flex-col font-sans">
             {/* Header */}
@@ -170,7 +184,8 @@ const RiderHome = () => {
 
             {/* Map View */}
             <div className="flex-1 relative z-0">
-                <MapContainer center={currentPosition} zoom={13} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
+                <MapContainer center={currentPosition} zoom={13} scrollWheelZoom={true} zoomControl={false} style={{ height: '100%', width: '100%' }}>
+                    <ZoomControl position="bottomright" />
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -296,6 +311,14 @@ const RiderHome = () => {
                                         </div>
                                     )}
                                 </div>
+
+                                {ride.status === 'REQUESTED' && (
+                                    <button onClick={handleCancelRide}
+                                        className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 border border-red-200 py-3 rounded-xl font-bold hover:bg-red-600 hover:text-white transition">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" /></svg>
+                                        Cancel Request
+                                    </button>
+                                )}
 
                                 {ride.status === 'COMPLETED' && (
                                     <button onClick={handlePayment} className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-700 shadow-xl transition transform hover:-translate-y-1">

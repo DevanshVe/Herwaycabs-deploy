@@ -84,6 +84,11 @@ export const bookingService = {
         return response.data;
     },
 
+    cancelRide: async (rideId) => {
+        const response = await api.post(`/bookings/${rideId}/cancel`);
+        return response.data;
+    },
+
     payRide: async (rideId) => {
         const response = await api.post(`/bookings/${rideId}/pay`);
         return response.data;
