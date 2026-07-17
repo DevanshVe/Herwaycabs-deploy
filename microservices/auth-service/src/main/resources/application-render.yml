@@ -1,0 +1,11 @@
+# Render-specific profile (activate with SPRING_PROFILES_ACTIVE=render).
+# Registers this instance in Eureka under its public onrender.com URL so that
+# the API gateway and Feign clients can reach it across Render services.
+# RENDER_EXTERNAL_HOSTNAME is set automatically by Render.
+eureka:
+  instance:
+    hostname: ${RENDER_EXTERNAL_HOSTNAME}
+    prefer-ip-address: false
+    secure-port-enabled: true
+    secure-port: 443
+    non-secure-port-enabled: false

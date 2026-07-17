@@ -4,6 +4,7 @@ import com.herwaycabs.driver.dto.LocationUpdateDto;
 import com.herwaycabs.driver.model.Driver;
 import com.herwaycabs.driver.repository.DriverRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,17 +14,18 @@ import java.util.List;
 public class DriverService {
 
     private final DriverRepository driverRepository;
-    private final String UPLOAD_DIR = "d:/CDAC/HerWayCabProject Folder/uploads/documents/";
+    @Value("${upload.dir:uploads/documents/}")
+    private String uploadDir;
 
     public Driver uploadDocument(Long driverId, org.springframework.web.multipart.MultipartFile file)
             throws java.io.IOException {
         Driver driver = getDriverById(driverId);
-        java.io.File directory = new java.io.File(UPLOAD_DIR);
+        java.io.File directory = new java.io.File(uploadDir).getAbsoluteFile();
         if (!directory.exists()) {
             directory.mkdirs();
         }
         String fileName = driverId + "_" + file.getOriginalFilename();
-        java.io.File dest = new java.io.File(UPLOAD_DIR + fileName);
+        java.io.File dest = new java.io.File(directory, fileName);
         file.transferTo(dest);
 
         driver.setDocumentPath(dest.getAbsolutePath());
