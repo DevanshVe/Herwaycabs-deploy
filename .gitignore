@@ -23,6 +23,9 @@ yarn-error.log*
 tmp/
 
 # --- Local Documentation (Ignored) ---
+# Secrets / URLs cheat-sheet — NEVER commit
+CREDENTIALS.local.md
+*.local.md
 github_setup_guide.md
 ide_setup_guide.md
 interview_prep.md

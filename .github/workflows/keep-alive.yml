@@ -2,11 +2,14 @@ name: keep-alive
 
 # Keeps the Render free-tier services from spinning down (they sleep after
 # ~15 min idle). Pings every service's /actuator/health so the whole Eureka
-# mesh stays warm and registered. Runs every 10 minutes; can also be run
+# mesh stays warm and registered. Runs every 5 minutes; can also be run
 # manually from the Actions tab (workflow_dispatch).
+# NOTE: GitHub's scheduled runner is best-effort and can be delayed/skipped
+# under load, so this alone may not fully prevent sleeps. For strict timing,
+# pair it with an external monitor (cron-job.org / UptimeRobot).
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch: {}
 
 jobs:
