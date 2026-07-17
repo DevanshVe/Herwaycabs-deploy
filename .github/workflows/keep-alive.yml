@@ -1,0 +1,36 @@
+name: keep-alive
+
+# Keeps the Render free-tier services from spinning down (they sleep after
+# ~15 min idle). Pings every service's /actuator/health so the whole Eureka
+# mesh stays warm and registered. Runs every 10 minutes; can also be run
+# manually from the Actions tab (workflow_dispatch).
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping all Render services
+        run: |
+          set +e
+          services=(
+            "https://herwaycabs-discovery.onrender.com/actuator/health"
+            "https://herwaycabs-api-gateway.onrender.com/actuator/health"
+            "https://herwaycabs-auth-service.onrender.com/actuator/health"
+            "https://herwaycabs-booking-service.onrender.com/actuator/health"
+            "https://herwaycabs-driver-service.onrender.com/actuator/health"
+            "https://herwaycabs-payment-service.onrender.com/actuator/health"
+            "https://herwaycabs-kyc-service.onrender.com/actuator/health"
+          )
+          # Ping all in parallel; a cold service may take up to ~2 min to wake.
+          for url in "${services[@]}"; do
+            (
+              code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 150 "$url")
+              echo "$code  $url"
+            ) &
+          done
+          wait
+          echo "keep-alive ping cycle complete"
