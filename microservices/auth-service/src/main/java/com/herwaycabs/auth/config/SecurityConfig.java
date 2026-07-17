@@ -34,6 +34,9 @@ public class SecurityConfig {
                         // Authentication APIs (register/authenticate must be open)
                         .requestMatchers(new AntPathRequestMatcher("/api/auth/**")).permitAll()
 
+                        // Error dispatch must be reachable, else exceptions get masked as 403
+                        .requestMatchers(new AntPathRequestMatcher("/error")).permitAll()
+
                         // Everything else requires JWT
                         .anyRequest().authenticated())
 
