@@ -9,6 +9,17 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+    hikari:
+      # Don't fail startup if Neon is momentarily cold — start and connect lazily
+      initialization-fail-timeout: 0
+
+  # Free-tier hardening: don't let a cold discovery server drag /actuator/health
+  # DOWN and cause Render deploys to fail their health check.
+  cloud:
+    discovery:
+      client:
+        health-indicator:
+          enabled: false
 
   jpa:
     hibernate:
