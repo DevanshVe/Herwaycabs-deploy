@@ -34,6 +34,10 @@ jwt:
   secret: ${JWT_SECRET}
   expiration: 86400000
 
+info:
+  build:
+    marker: auth-antpath-fix-v1
+
 management:
   endpoints:
     web:
@@ -43,6 +47,10 @@ management:
   endpoint:
     health:
       show-details: always
+
+  info:
+    env:
+      enabled: true
 
 logging:
   level:
