@@ -21,14 +21,14 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_URL}
+      defaultZone: ${EUREKA_URL:https://herwaycabs-discovery.onrender.com/eureka/}
 
   instance:
-    prefer-ip-address: true
+    prefer-ip-address: false
 
 razorpay:
-  key-id: ${RAZORPAY_KEY_ID}
-  key-secret: ${RAZORPAY_KEY_SECRET}
+  key-id: ${RAZORPAY_KEY_ID:placeholder_key}
+  key-secret: ${RAZORPAY_KEY_SECRET:placeholder_secret}
 
 management:
   endpoints:

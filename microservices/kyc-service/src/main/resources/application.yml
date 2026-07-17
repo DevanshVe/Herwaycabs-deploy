@@ -21,10 +21,10 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_URL}
+      defaultZone: ${EUREKA_URL:https://herwaycabs-discovery.onrender.com/eureka/}
 
   instance:
-    prefer-ip-address: true
+    prefer-ip-address: false
 
 management:
   endpoints:
