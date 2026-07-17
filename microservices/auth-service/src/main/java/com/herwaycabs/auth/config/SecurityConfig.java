@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -27,11 +28,11 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // Render Health Check
-                        .requestMatchers("/actuator/**").permitAll()
+                        // Render Health Check (explicit ant-path: no MVC-matcher ambiguity)
+                        .requestMatchers(new AntPathRequestMatcher("/actuator/**")).permitAll()
 
-                        // Authentication APIs
-                        .requestMatchers("/api/auth/**").permitAll()
+                        // Authentication APIs (register/authenticate must be open)
+                        .requestMatchers(new AntPathRequestMatcher("/api/auth/**")).permitAll()
 
                         // Everything else requires JWT
                         .anyRequest().authenticated())
