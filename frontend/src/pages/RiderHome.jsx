@@ -35,6 +35,11 @@ function distanceKm(a, b) {
     return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
 }
 
+// Recently-used drop locations, remembered in the browser.
+const RECENT_KEY = 'hwc_recent_dests';
+const loadRecent = () => { try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || []; } catch { return []; } };
+const saveRecent = (list) => { try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch { /* ignore */ } };
+
 const RiderHome = () => {
     const { user, logout } = useAuth();
     const { add: notify } = useNotifications();
@@ -58,7 +63,25 @@ const RiderHome = () => {
     const [cabType, setCabType] = useState('ECONOMY');
     const [routeLine, setRouteLine] = useState(null);
     const [routeInfo, setRouteInfo] = useState(null);
+    const [recentDests, setRecentDests] = useState(loadRecent);
     const prevStatus = useRef(null);
+
+    const addRecentDest = (label, lat, lon) => {
+        setRecentDests((prev) => {
+            const next = [{ label, lat, lon }, ...prev.filter((d) => d.label !== label)].slice(0, 4);
+            saveRecent(next);
+            return next;
+        });
+    };
+
+    const copyOtp = async (otp) => {
+        try {
+            await navigator.clipboard.writeText(otp);
+            setNotice({ type: 'success', message: 'OTP copied to clipboard.' });
+        } catch {
+            setNotice({ type: 'info', message: `Your OTP is ${otp}` });
+        }
+    };
 
     // Straight-line distance for the fare estimate (matches the backend formula).
     const estOrigin = pickupCoords || currentPosition;
@@ -331,8 +354,21 @@ const RiderHome = () => {
                                     placeholder="Pickup location" leftDot="w-3 h-3 bg-primary rounded-full ring-4 ring-pink-50" />
                                 <LocationInput value={drop}
                                     onChange={(v) => { setDrop(v); setDropCoords(null); }}
-                                    onSelect={(s) => { setDrop(s.label); setDropCoords([s.lat, s.lon]); }}
+                                    onSelect={(s) => { setDrop(s.label); setDropCoords([s.lat, s.lon]); addRecentDest(s.label, s.lat, s.lon); }}
                                     placeholder="Enter destination" leftDot="w-3 h-3 bg-gray-400 rounded-sm" />
+
+                                {recentDests.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {recentDests.map((d, i) => (
+                                            <button type="button" key={i} title={d.label}
+                                                onClick={() => { setDrop(d.label); setDropCoords([d.lat, d.lon]); }}
+                                                className="flex items-center gap-1 text-xs bg-pink-50 text-primary px-2.5 py-1 rounded-full hover:bg-pink-100 transition truncate max-w-[10rem]">
+                                                <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                {d.label.split(',')[0]}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
 
                                 {/* Cab type */}
                                 <div className="grid grid-cols-2 gap-2">
@@ -405,7 +441,12 @@ const RiderHome = () => {
 
                                 <div className="bg-gray-50 p-4 rounded-xl flex justify-between items-center">
                                     <div><p className="text-xs text-gray-500 uppercase font-bold">Fare · {ride.cabType === 'LUXURY' ? 'Luxury' : 'Economy'}</p><p className="text-xl font-bold text-gray-900">₹{Math.round(ride.fare)}</p></div>
-                                    {ride.otp && !['COMPLETED', 'PAID', 'CANCELLED'].includes(ride.status) && <div className="text-right"><p className="text-xs text-gray-500 uppercase font-bold">OTP</p><p className="text-2xl font-mono font-bold tracking-widest text-black">{ride.otp}</p></div>}
+                                    {ride.otp && !['COMPLETED', 'PAID', 'CANCELLED'].includes(ride.status) && (
+                                        <button type="button" onClick={() => copyOtp(ride.otp)} title="Copy OTP" className="text-right group">
+                                            <p className="text-xs text-gray-500 uppercase font-bold group-hover:text-primary transition">OTP · tap to copy</p>
+                                            <p className="text-2xl font-mono font-bold tracking-widest text-black group-hover:text-primary transition">{ride.otp}</p>
+                                        </button>
+                                    )}
                                 </div>
 
                                 {ride.status === 'REQUESTED' && (

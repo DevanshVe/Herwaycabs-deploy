@@ -6,6 +6,8 @@ import com.herwaycabs.kyc.model.DocumentType;
 import com.herwaycabs.kyc.repository.DocumentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -35,7 +37,7 @@ public class KycService {
 
     public Document verifyDocument(Long documentId, Boolean approved, String notes) {
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new RuntimeException("Document not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found"));
 
         document.setStatus(approved ? DocumentStatus.APPROVED : DocumentStatus.REJECTED);
         document.setVerificationNotes(notes);
@@ -58,6 +60,6 @@ public class KycService {
 
     public Document getDocument(Long documentId) {
         return documentRepository.findById(documentId)
-                .orElseThrow(() -> new RuntimeException("Document not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found"));
     }
 }

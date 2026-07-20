@@ -33,6 +33,18 @@ forwardedOptions.KnownNetworks.Clear();
 forwardedOptions.KnownProxies.Clear();
 app.UseForwardedHeaders(forwardedOptions);
 
+// Baseline security headers.
+app.Use(async (context, next) =>
+{
+    var headers = context.Response.Headers;
+    headers["X-Content-Type-Options"] = "nosniff";
+    headers["X-Frame-Options"] = "DENY";
+    headers["Referrer-Policy"] = "no-referrer";
+    headers["Content-Security-Policy"] =
+        "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'";
+    await next();
+});
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");

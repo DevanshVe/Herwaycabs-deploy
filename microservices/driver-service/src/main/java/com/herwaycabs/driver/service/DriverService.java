@@ -6,6 +6,8 @@ import com.herwaycabs.driver.repository.DriverRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -47,7 +49,7 @@ public class DriverService {
 
     public Driver getDriverById(Long id) {
         return driverRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Driver not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Driver not found"));
     }
 
     public Driver updateLocation(Long driverId, LocationUpdateDto location) {
@@ -60,7 +62,7 @@ public class DriverService {
     public Driver updateAvailability(Long driverId, Boolean isAvailable) {
         Driver driver = getDriverById(driverId);
         if (isAvailable && (driver.getIsVerified() == null || !driver.getIsVerified())) {
-            throw new RuntimeException("Driver must be verified before going online.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Driver must be verified before going online.");
         }
         driver.setIsAvailable(isAvailable);
         return driverRepository.save(driver);

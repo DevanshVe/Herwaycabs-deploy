@@ -10,7 +10,9 @@ import com.herwaycabs.booking.model.Ride;
 import com.herwaycabs.booking.model.RideStatus;
 import com.herwaycabs.booking.repository.RideRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -66,16 +68,16 @@ public class BookingService {
 
     public Ride assignDriver(Long rideId) {
         Ride ride = rideRepository.findById(rideId)
-                .orElseThrow(() -> new RuntimeException("Ride not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ride not found"));
 
         if (ride.getStatus() != RideStatus.REQUESTED) {
-            throw new RuntimeException("Ride is not in requested state");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ride is not in requested state");
         }
 
         // Use Feign Client to find available driver
         DriverDto driver = driverServiceClient.getAvailableDrivers().stream()
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("No drivers available"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "No drivers available"));
 
         ride.setDriverId(driver.getId());
         ride.setStatus(RideStatus.DRIVER_ASSIGNED);
@@ -84,9 +86,9 @@ public class BookingService {
 
     public Ride acceptRide(Long rideId, Long driverId) {
         Ride ride = rideRepository.findById(rideId)
-                .orElseThrow(() -> new RuntimeException("Ride not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ride not found"));
         if (ride.getStatus() != RideStatus.REQUESTED) {
-            throw new RuntimeException("Ride already taken or cancelled");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ride already taken or cancelled");
         }
         ride.setDriverId(driverId);
         ride.setStatus(RideStatus.DRIVER_ASSIGNED);
@@ -97,10 +99,10 @@ public class BookingService {
 
     public Ride startRide(Long rideId, String otp) {
         Ride ride = rideRepository.findById(rideId)
-                .orElseThrow(() -> new RuntimeException("Ride not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ride not found"));
 
         if (!ride.getOtp().equals(otp)) {
-            throw new RuntimeException("Invalid OTP");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid OTP");
         }
 
         ride.setStatus(RideStatus.STARTED);
@@ -110,7 +112,7 @@ public class BookingService {
 
     public Ride completeRide(Long rideId) {
         Ride ride = rideRepository.findById(rideId)
-                .orElseThrow(() -> new RuntimeException("Ride not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ride not found"));
 
         ride.setStatus(RideStatus.COMPLETED);
         ride.setEndTime(LocalDateTime.now());
@@ -121,14 +123,14 @@ public class BookingService {
 
     public Ride payRide(Long rideId) {
         Ride ride = rideRepository.findById(rideId)
-                .orElseThrow(() -> new RuntimeException("Ride not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ride not found"));
         ride.setStatus(RideStatus.PAID);
         return rideRepository.save(ride);
     }
 
     public Ride cancelRide(Long rideId) {
         Ride ride = rideRepository.findById(rideId)
-                .orElseThrow(() -> new RuntimeException("Ride not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ride not found"));
         ride.setStatus(RideStatus.CANCELLED);
         Ride saved = rideRepository.save(ride);
         setDriverOnTrip(ride.getDriverId(), false); // free the driver if one was assigned
@@ -138,13 +140,13 @@ public class BookingService {
     // Rider rates the driver for a finished ride (1-5 + optional note).
     public Ride rateRide(Long rideId, RatingRequest request) {
         Ride ride = rideRepository.findById(rideId)
-                .orElseThrow(() -> new RuntimeException("Ride not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ride not found"));
         if (ride.getStatus() != RideStatus.COMPLETED && ride.getStatus() != RideStatus.PAID) {
-            throw new RuntimeException("You can only rate a completed ride.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You can only rate a completed ride.");
         }
         Integer rating = request.getRating();
         if (rating == null || rating < 1 || rating > 5) {
-            throw new RuntimeException("Rating must be between 1 and 5.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rating must be between 1 and 5.");
         }
         ride.setDriverRating(rating);
         ride.setDriverFeedback(request.getFeedback());

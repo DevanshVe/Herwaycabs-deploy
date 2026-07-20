@@ -55,6 +55,25 @@ flowchart TD
 
 Every backend service registers with **Eureka** and is reachable only through the **API Gateway** (`lb://SERVICE-NAME`). The frontend never talks to services directly — always through the gateway.
 
+### Ride flow
+
+```mermaid
+sequenceDiagram
+    participant R as Rider (SPA)
+    participant G as API Gateway
+    participant B as Booking
+    participant D as Driver
+    R->>G: POST /api/bookings/request (pickup, drop, cabType)
+    G->>B: request ride → fare + OTP
+    Note over R: driver accepts (pull model)
+    R->>G: POST /api/bookings/{id}/accept
+    G->>B: assign driver
+    B->>D: mark driver On trip (Feign)
+    R->>G: OTP verified → START → COMPLETE
+    R->>G: POST /api/bookings/{id}/pay → then /rate
+    B->>D: free the driver (On trip = false)
+```
+
 ---
 
 ## Services
@@ -157,6 +176,17 @@ npm run dev
 
 > Registration requires `gender: "Female"` — the platform is women-only by design. Auth returns a JWT that the frontend stores and attaches (`Authorization: Bearer …`) on subsequent calls.
 
+### Interactive API docs (Swagger)
+
+Each Spring service exposes OpenAPI docs via **springdoc** at `<service-url>/swagger-ui.html` (raw spec at `/v3/api-docs`), e.g.:
+
+- Auth — https://herwaycabs-auth-service.onrender.com/swagger-ui.html
+- Booking — https://herwaycabs-booking-service.onrender.com/swagger-ui.html
+- Driver — https://herwaycabs-driver-service.onrender.com/swagger-ui.html
+- KYC — https://herwaycabs-kyc-service.onrender.com/swagger-ui.html
+
+*(Free-tier services may need ~30–60s to wake on first hit.)*
+
 ---
 
 ## Deployment
@@ -168,6 +198,10 @@ npm run dev
 - **`.github/workflows/keep-alive.yml`** pings every service on a schedule to reduce free-tier cold starts.
 
 ---
+
+## Security
+
+See **[SECURITY.md](SECURITY.md)** for the security posture — what's protected (BCrypt, JWT, admin cookie auth + security headers, durable documents), the demo-only limitations (some public read endpoints, simulated payments), and the hardening roadmap.
 
 ## Roadmap
 

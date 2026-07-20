@@ -7,6 +7,14 @@ spring:
   application:
     name: booking-service
 
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 5000
+            read-timeout: 15000
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}

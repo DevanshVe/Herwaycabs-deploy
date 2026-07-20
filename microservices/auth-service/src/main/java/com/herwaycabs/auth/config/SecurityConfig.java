@@ -37,6 +37,11 @@ public class SecurityConfig {
                         // Error dispatch must be reachable, else exceptions get masked as 403
                         .requestMatchers(new AntPathRequestMatcher("/error")).permitAll()
 
+                        // OpenAPI / Swagger UI
+                        .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/swagger-ui.html")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
+
                         // Everything else requires JWT
                         .anyRequest().authenticated())
 

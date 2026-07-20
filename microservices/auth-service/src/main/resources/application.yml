@@ -22,6 +22,12 @@ spring:
       client:
         health-indicator:
           enabled: false
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 5000
+            read-timeout: 15000
 
   jpa:
     hibernate:
