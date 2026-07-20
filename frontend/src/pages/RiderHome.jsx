@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { useAuth } from '../context/AuthContext';
 import { bookingService, driverService } from '../services/api';
 import Toast from '../components/Toast';
+import RideHistoryModal from '../components/RideHistoryModal';
 import { pickupIcon as greenIcon, dropIcon as redIcon } from '../utils/mapIcons';
 
 // Centers the map on the user's location: once automatically, then on each recenter click.
@@ -32,6 +33,7 @@ const RiderHome = () => {
     const [recenterSignal, setRecenterSignal] = useState(0);
     const [notice, setNotice] = useState(null);
     const [assignedDriver, setAssignedDriver] = useState(null);
+    const [showHistory, setShowHistory] = useState(false);
 
     // Fetch the assigned driver's details so we can show them to the rider
     useEffect(() => {
@@ -102,7 +104,7 @@ const RiderHome = () => {
                 dropLocation: drop || 'Pinned drop', dropLatitude: dLat, dropLongitude: dLon
             }, user.id);
             setRide(data);
-            setNotice({ type: 'success', message: `Ride requested — estimated fare ₹${data.fare}. Finding a driver…` });
+            setNotice({ type: 'success', message: `Ride requested — estimated fare ₹${Math.round(data.fare)}. Finding a driver…` });
         } catch (error) {
             const msg = error.response ? (error.response.data?.message || 'Could not request the ride. Please try again.') : 'Cannot reach the server right now — please try again in a moment.';
             setNotice({ type: 'error', message: msg });
@@ -146,16 +148,21 @@ const RiderHome = () => {
                     </div>
                     <h1 className="text-xl font-bold text-primary tracking-tight">HerWayCabs</h1>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                     <div className="text-right hidden sm:block">
                         <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
                         <p className="text-xs text-gray-500">Rider</p>
                     </div>
+                    <button onClick={() => setShowHistory(true)} className="text-gray-600 hover:text-primary px-3 py-2 rounded-full text-sm font-medium transition">
+                        History
+                    </button>
                     <button onClick={logout} className="bg-secondary hover:bg-pink-200 text-accent px-4 py-2 rounded-full text-sm font-medium transition">
                         Logout
                     </button>
                 </div>
             </header>
+
+            <RideHistoryModal open={showHistory} onClose={() => setShowHistory(false)} userId={user?.id} role={user?.role} />
 
             {/* Map */}
             <div className="flex-1 relative z-0">
@@ -246,7 +253,7 @@ const RiderHome = () => {
                                 </div>
 
                                 <div className="bg-gray-50 p-4 rounded-xl flex justify-between items-center">
-                                    <div><p className="text-xs text-gray-500 uppercase font-bold">Fare</p><p className="text-xl font-bold text-gray-900">₹{ride.fare}</p></div>
+                                    <div><p className="text-xs text-gray-500 uppercase font-bold">Fare</p><p className="text-xl font-bold text-gray-900">₹{Math.round(ride.fare)}</p></div>
                                     {ride.otp && <div className="text-right"><p className="text-xs text-gray-500 uppercase font-bold">OTP</p><p className="text-2xl font-mono font-bold tracking-widest text-black">{ride.otp}</p></div>}
                                 </div>
 
@@ -259,7 +266,7 @@ const RiderHome = () => {
                                 )}
 
                                 {ride.status === 'COMPLETED' && (
-                                    <button onClick={handlePayment} className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-700 shadow-lg transition">Pay ₹{ride.fare}</button>
+                                    <button onClick={handlePayment} className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-700 shadow-lg transition">Pay ₹{Math.round(ride.fare)}</button>
                                 )}
 
                                 {ride.status === 'PAID' && (

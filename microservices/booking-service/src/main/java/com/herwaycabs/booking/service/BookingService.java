@@ -25,6 +25,11 @@ public class BookingService {
         return rideRepository.findByStatus(RideStatus.REQUESTED);
     }
 
+    // Admin listing — every ride on the platform.
+    public List<Ride> getAllRides() {
+        return rideRepository.findAll();
+    }
+
     public Ride requestRide(Long riderId, RideRequestDto request) {
         double fare = fareService.calculateFare(
                 request.getPickupLatitude(),

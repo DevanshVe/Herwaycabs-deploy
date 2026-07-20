@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient<IDriverService, DriverService>();
 builder.Services.AddHttpClient<IAuthApiService, AuthApiService>();
+builder.Services.AddHttpClient<IBookingService, BookingService>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

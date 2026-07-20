@@ -4,6 +4,7 @@ import { bookingService, driverService } from '../services/api';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import Toast from '../components/Toast';
+import RideHistoryModal from '../components/RideHistoryModal';
 import { pickupIcon as greenIcon, dropIcon as redIcon } from '../utils/mapIcons';
 
 const DriverHome = () => {
@@ -13,6 +14,7 @@ const DriverHome = () => {
     const [otp, setOtp] = useState('');
     const [isOnline, setIsOnline] = useState(user?.isAvailable || false);
     const [notice, setNotice] = useState(null);
+    const [showHistory, setShowHistory] = useState(false);
 
     useEffect(() => {
         if (!user?.id) return;
@@ -123,9 +125,12 @@ const DriverHome = () => {
                 </div>
                 <div className="flex items-center gap-4">
                     <p className="font-medium text-gray-700 hidden sm:block">{user?.name}</p>
+                    <button onClick={() => setShowHistory(true)} className="text-gray-600 font-semibold text-sm hover:text-primary transition">History</button>
                     <button onClick={logout} className="text-accent font-semibold text-sm hover:underline">Logout</button>
                 </div>
             </header>
+
+            <RideHistoryModal open={showHistory} onClose={() => setShowHistory(false)} userId={user?.id} role={user?.role} />
 
             <div className="flex-1 p-6 md:p-8 max-w-6xl mx-auto w-full overflow-auto">
                 {activeRide ? (
@@ -146,7 +151,7 @@ const DriverHome = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                             <div><p className="text-xs font-bold text-gray-400 uppercase mb-1">Pickup</p><p className="font-semibold text-gray-900">{activeRide.pickupLocation}</p></div>
                             <div><p className="text-xs font-bold text-gray-400 uppercase mb-1">Drop</p><p className="font-semibold text-gray-900">{activeRide.dropLocation}</p></div>
-                            <div className="bg-green-50 p-4 rounded-xl"><p className="text-sm font-bold text-green-700">Fare</p><p className="text-2xl font-extrabold text-green-800">₹{activeRide.fare}</p></div>
+                            <div className="bg-green-50 p-4 rounded-xl"><p className="text-sm font-bold text-green-700">Fare</p><p className="text-2xl font-extrabold text-green-800">₹{Math.round(activeRide.fare)}</p></div>
                             <div className="bg-pink-50 p-4 rounded-xl"><p className="text-sm font-bold text-pink-700">Rider</p><p className="text-xl font-bold text-pink-800">#{activeRide.riderId}</p></div>
                         </div>
 
@@ -191,7 +196,7 @@ const DriverHome = () => {
                                     <div key={ride.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition">
                                         <div className="flex justify-between items-start mb-4">
                                             <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold">#{ride.id}</span>
-                                            <span className="text-green-600 text-lg font-bold">₹{ride.fare}</span>
+                                            <span className="text-green-600 text-lg font-bold">₹{Math.round(ride.fare)}</span>
                                         </div>
                                         <div className="space-y-3 mb-6 text-sm">
                                             <div><p className="text-xs text-gray-400 font-bold uppercase">Pickup</p><p className="font-semibold text-gray-900 truncate">{ride.pickupLocation}</p></div>

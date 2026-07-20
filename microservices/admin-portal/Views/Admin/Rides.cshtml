@@ -1,0 +1,63 @@
+@model List<admin_portal.Models.RideViewModel>
+@{
+    ViewData["Title"] = "Rides";
+
+    string BadgeClass(string? status) => (status ?? "").ToUpper() switch
+    {
+        "PAID" => "hwc-badge-green",
+        "COMPLETED" => "hwc-badge-green",
+        "CANCELLED" => "hwc-badge-gray",
+        "STARTED" => "hwc-badge-blue",
+        "DRIVER_ASSIGNED" => "hwc-badge-blue",
+        "REQUESTED" => "hwc-badge-amber",
+        _ => "hwc-badge-gray",
+    };
+}
+
+<div class="hwc-page-head">
+    <h1>Rides</h1>
+    <p>Every ride on HerWayCabs — @(Model?.Count ?? 0) total.</p>
+</div>
+
+@if (ViewBag.LoadError == true)
+{
+    <div class="hwc-flash hwc-flash-err">Couldn't load rides — the booking service may be waking up. Refresh in a moment.</div>
+}
+else if (Model == null || !Model.Any())
+{
+    <div class="hwc-empty">
+        <div class="hwc-empty-icon" style="background:#fce7f3;color:#db2777;">&#128661;</div>
+        <p>No rides yet.</p>
+    </div>
+}
+else
+{
+    <div class="hwc-table-wrap">
+        <table class="hwc-table">
+            <thead>
+                <tr><th>Ride</th><th>Route</th><th>Rider / Driver</th><th>Fare</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model.OrderByDescending(x => x.Id))
+                {
+                    <tr>
+                        <td>
+                            <div class="hwc-cell-name">#@r.Id</div>
+                            <div class="hwc-cell-sub">@(r.RequestTime?.ToString("dd MMM yyyy, HH:mm") ?? "—")</div>
+                        </td>
+                        <td>
+                            <div>@r.PickupLocation</div>
+                            <div class="hwc-cell-sub">&#8594; @r.DropLocation</div>
+                        </td>
+                        <td>
+                            <div>Rider #@(r.RiderId?.ToString() ?? "—")</div>
+                            <div class="hwc-cell-sub">Driver @(r.DriverId.HasValue ? "#" + r.DriverId : "unassigned")</div>
+                        </td>
+                        <td><strong>&#8377;@Math.Round(r.Fare)</strong></td>
+                        <td><span class="hwc-badge @BadgeClass(r.Status)">@((r.Status ?? "").Replace("_", " "))</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

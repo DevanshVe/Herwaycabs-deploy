@@ -1,28 +1,36 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - HerWayCabs Admin</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
     <header>
         <nav class="hwc-navbar">
-            <div class="container d-flex align-items-center justify-content-between">
+            <div class="container hwc-nav-inner">
                 <a class="hwc-brand" asp-controller="Admin" asp-action="Index">
-                    <span class="hwc-logo">H</span> HerWayCabs <span class="hwc-brand-sub">Admin</span>
+                    <span class="hwc-logo">H</span>
+                    <span>HerWayCabs <span class="hwc-brand-sub">Admin</span></span>
                 </a>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
+                    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+                    var uname = User.Identity.Name ?? "";
+                    var initial = string.IsNullOrEmpty(uname) ? "A" : uname.Substring(0, 1).ToUpper();
+
+                    <nav class="hwc-tabs">
+                        <a class="@(action == "Index" ? "active" : "")" asp-controller="Admin" asp-action="Index">Verifications</a>
+                        <a class="@(action == "Drivers" ? "active" : "")" asp-controller="Admin" asp-action="Drivers">Drivers</a>
+                        <a class="@(action == "Users" ? "active" : "")" asp-controller="Admin" asp-action="Users">Users</a>
+                        <a class="@(action == "Rides" ? "active" : "")" asp-controller="Admin" asp-action="Rides">Rides</a>
+                    </nav>
                     <div class="hwc-nav-right">
-                        <nav class="hwc-tabs">
-                            <a asp-controller="Admin" asp-action="Index">Verifications</a>
-                            <a asp-controller="Admin" asp-action="Drivers">Drivers</a>
-                            <a asp-controller="Admin" asp-action="Users">Users</a>
-                        </nav>
-                        <span class="hwc-user">@User.Identity.Name</span>
+                        <div class="hwc-user-chip">
+                            <span class="hwc-avatar-xs">@initial</span>
+                            <span class="hwc-user">@uname</span>
+                        </div>
                         <form asp-controller="Account" asp-action="Logout" method="post" class="hwc-logout-form">
                             <button type="submit" class="hwc-logout-btn">Logout</button>
                         </form>
@@ -31,17 +39,17 @@
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+
+    <div class="container hwc-main">
+        <main role="main">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="hwc-footer text-center">
-        <div class="container">&copy; 2026 HerWayCabs · Admin Console</div>
+    <footer class="hwc-footer">
+        <div class="container">&copy; 2026 HerWayCabs &middot; Admin Console</div>
     </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -28,6 +28,12 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.getAvailableRides());
     }
 
+    // All rides — used by the admin console.
+    @GetMapping("/all")
+    public ResponseEntity<List<Ride>> getAllRides() {
+        return ResponseEntity.ok(bookingService.getAllRides());
+    }
+
     @PostMapping("/{rideId}/assign")
     public ResponseEntity<Ride> assignDriver(@PathVariable Long rideId) {
         return ResponseEntity.ok(bookingService.assignDriver(rideId));

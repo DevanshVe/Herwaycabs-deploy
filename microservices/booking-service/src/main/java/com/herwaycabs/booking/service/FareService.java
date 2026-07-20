@@ -10,7 +10,8 @@ public class FareService {
 
     public double calculateFare(double lat1, double lon1, double lat2, double lon2) {
         double distanceKm = calculateDistance(lat1, lon1, lat2, lon2);
-        return Math.max(BASE_FARE, distanceKm * PER_KM_RATE);
+        double fare = Math.max(BASE_FARE, distanceKm * PER_KM_RATE);
+        return Math.round(fare); // whole rupees — no long decimals on the UI
     }
 
     // Haversine formula for distance

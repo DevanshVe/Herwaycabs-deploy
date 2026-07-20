@@ -53,7 +53,7 @@ Every backend service registers with **Eureka** and is reachable only through th
 | Payment Service | Spring Boot + Razorpay | 8083 | Payments (runs in mock mode without keys) |
 | Driver Service | Spring Boot + JPA | 8084 | Drivers, availability, verification, documents |
 | KYC Service | Spring Boot + JPA | 8085 | Document upload / verification |
-| Admin Portal | ASP.NET Core 8 MVC (C#) | 8080 | Admin console — driver verification, all-drivers & all-users views (cookie auth, ADMIN-only) |
+| Admin Portal | ASP.NET Core 8 MVC (C#) | 8080 | Admin console — driver verification, all-drivers, all-users & all-rides views (cookie auth, ADMIN-only) |
 | Frontend | React 19 + Vite + Tailwind + Leaflet | 5173 | Rider / Driver / Admin UI |
 
 ---
@@ -120,7 +120,9 @@ npm run dev
 | POST | `/api/auth/authenticate` | Auth |
 | GET  | `/api/auth/users` | Auth (admin listing, no password hashes) |
 | GET  | `/api/bookings/available` | Booking |
+| GET  | `/api/bookings/all` | Booking (all rides — admin ride history) |
 | POST | `/api/bookings/request` | Booking |
+| GET  | `/api/bookings/my-rides` | Booking (a rider's / driver's own ride history) |
 | GET  | `/api/drivers` | Driver (all drivers) |
 | GET  | `/api/drivers/available` | Driver |
 | GET  | `/api/drivers/pending` | Driver |

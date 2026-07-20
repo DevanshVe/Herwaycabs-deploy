@@ -10,11 +10,13 @@ public class AdminController : Controller
 {
     private readonly IDriverService _driverService;
     private readonly IAuthApiService _authService;
+    private readonly IBookingService _bookingService;
 
-    public AdminController(IDriverService driverService, IAuthApiService authService)
+    public AdminController(IDriverService driverService, IAuthApiService authService, IBookingService bookingService)
     {
         _driverService = driverService;
         _authService = authService;
+        _bookingService = bookingService;
     }
 
     // Pending driver verifications
@@ -79,5 +81,21 @@ public class AdminController : Controller
             ViewBag.LoadError = true;
         }
         return View(users);
+    }
+
+    // All rides (ride history across the platform)
+    public async Task<IActionResult> Rides()
+    {
+        List<RideViewModel> rides;
+        try
+        {
+            rides = await _bookingService.GetAllRides();
+        }
+        catch
+        {
+            rides = new List<RideViewModel>();
+            ViewBag.LoadError = true;
+        }
+        return View(rides);
     }
 }
