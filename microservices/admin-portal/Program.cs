@@ -4,6 +4,15 @@ using admin_portal.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Bind to the port Render assigns (PORT env). Without this the app defaults to
+// 8080 while Render health-checks its default port, causing a port-detection
+// restart and occasional deploy timeouts.
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrWhiteSpace(port))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient<IDriverService, DriverService>();
 builder.Services.AddHttpClient<IAuthApiService, AuthApiService>();
