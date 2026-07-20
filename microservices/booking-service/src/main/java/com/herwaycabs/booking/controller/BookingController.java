@@ -1,5 +1,7 @@
 package com.herwaycabs.booking.controller;
 
+import com.herwaycabs.booking.dto.DriverRatingDto;
+import com.herwaycabs.booking.dto.RatingRequest;
 import com.herwaycabs.booking.dto.RideRequestDto;
 import com.herwaycabs.booking.model.Ride;
 import com.herwaycabs.booking.service.BookingService;
@@ -73,5 +75,19 @@ public class BookingController {
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader(value = "X-User-Role", defaultValue = "RIDER") String role) {
         return ResponseEntity.ok(bookingService.getMyRides(userId, role));
+    }
+
+    // Rider rates the driver after a finished ride.
+    @PostMapping("/{rideId}/rate")
+    public ResponseEntity<Ride> rateRide(
+            @PathVariable Long rideId,
+            @RequestBody RatingRequest request) {
+        return ResponseEntity.ok(bookingService.rateRide(rideId, request));
+    }
+
+    // A driver's average rating (for rider display / admin).
+    @GetMapping("/driver/{driverId}/rating")
+    public ResponseEntity<DriverRatingDto> getDriverRating(@PathVariable Long driverId) {
+        return ResponseEntity.ok(bookingService.getDriverRating(driverId));
     }
 }

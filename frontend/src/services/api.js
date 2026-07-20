@@ -124,6 +124,16 @@ export const bookingService = {
 
         return response.data;
     },
+
+    rateRide: async (rideId, rating, feedback) => {
+        const response = await api.post(`/bookings/${rideId}/rate`, { rating, feedback });
+        return response.data;
+    },
+
+    getDriverRating: async (driverId) => {
+        const response = await api.get(`/bookings/driver/${driverId}/rating`);
+        return response.data;
+    },
 };
 
 export const driverService = {

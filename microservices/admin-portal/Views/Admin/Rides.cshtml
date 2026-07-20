@@ -49,7 +49,7 @@ else
     <div class="hwc-table-wrap" data-tools data-toolbar="#ridesToolbar" data-page-size="10">
         <table class="hwc-table">
             <thead>
-                <tr><th>Ride</th><th>Route</th><th>Rider / Driver</th><th>Fare</th><th>Status</th></tr>
+                <tr><th>Ride</th><th>Route</th><th>Rider / Driver</th><th>Fare</th><th>Rating</th><th>Status</th></tr>
             </thead>
             <tbody>
                 @foreach (var r in Model.OrderByDescending(x => x.Id))
@@ -69,6 +69,16 @@ else
                             <div class="hwc-cell-sub">Driver @(r.DriverId.HasValue ? "#" + r.DriverId : "unassigned")</div>
                         </td>
                         <td><strong>&#8377;@Math.Round(r.Fare)</strong></td>
+                        <td>
+                            @if (r.DriverRating.HasValue)
+                            {
+                                <span title="@r.DriverFeedback" style="color:#f59e0b; white-space:nowrap;">@(new string('★', r.DriverRating.Value))<span style="color:#e5e7eb;">@(new string('☆', 5 - r.DriverRating.Value))</span></span>
+                            }
+                            else
+                            {
+                                <span class="hwc-cell-sub">&mdash;</span>
+                            }
+                        </td>
                         <td><span class="hwc-badge @BadgeClass(r.Status)">@(status.Replace("_", " "))</span></td>
                     </tr>
                 }

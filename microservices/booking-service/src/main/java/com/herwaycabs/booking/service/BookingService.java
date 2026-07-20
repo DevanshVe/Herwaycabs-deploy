@@ -2,6 +2,8 @@ package com.herwaycabs.booking.service;
 
 import com.herwaycabs.booking.client.DriverServiceClient;
 import com.herwaycabs.booking.dto.DriverDto;
+import com.herwaycabs.booking.dto.DriverRatingDto;
+import com.herwaycabs.booking.dto.RatingRequest;
 import com.herwaycabs.booking.dto.RideRequestDto;
 import com.herwaycabs.booking.model.Ride;
 import com.herwaycabs.booking.model.RideStatus;
@@ -84,7 +86,9 @@ public class BookingService {
         }
         ride.setDriverId(driverId);
         ride.setStatus(RideStatus.DRIVER_ASSIGNED);
-        return rideRepository.save(ride);
+        Ride saved = rideRepository.save(ride);
+        setDriverAvailability(driverId, false); // busy while on this trip
+        return saved;
     }
 
     public Ride startRide(Long rideId, String otp) {
@@ -106,7 +110,9 @@ public class BookingService {
 
         ride.setStatus(RideStatus.COMPLETED);
         ride.setEndTime(LocalDateTime.now());
-        return rideRepository.save(ride);
+        Ride saved = rideRepository.save(ride);
+        setDriverAvailability(ride.getDriverId(), true); // free to take new rides
+        return saved;
     }
 
     public Ride payRide(Long rideId) {
@@ -120,7 +126,42 @@ public class BookingService {
         Ride ride = rideRepository.findById(rideId)
                 .orElseThrow(() -> new RuntimeException("Ride not found"));
         ride.setStatus(RideStatus.CANCELLED);
+        Ride saved = rideRepository.save(ride);
+        setDriverAvailability(ride.getDriverId(), true); // free the driver if one was assigned
+        return saved;
+    }
+
+    // Rider rates the driver for a finished ride (1-5 + optional note).
+    public Ride rateRide(Long rideId, RatingRequest request) {
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new RuntimeException("Ride not found"));
+        if (ride.getStatus() != RideStatus.COMPLETED && ride.getStatus() != RideStatus.PAID) {
+            throw new RuntimeException("You can only rate a completed ride.");
+        }
+        Integer rating = request.getRating();
+        if (rating == null || rating < 1 || rating > 5) {
+            throw new RuntimeException("Rating must be between 1 and 5.");
+        }
+        ride.setDriverRating(rating);
+        ride.setDriverFeedback(request.getFeedback());
         return rideRepository.save(ride);
+    }
+
+    // Average rating (and count) for a driver, across all their rated rides.
+    public DriverRatingDto getDriverRating(Long driverId) {
+        List<Ride> rides = rideRepository.findByDriverId(driverId);
+        long count = rides.stream().filter(r -> r.getDriverRating() != null).count();
+        if (count == 0) {
+            return DriverRatingDto.builder().average(null).count(0L).build();
+        }
+        double avg = rides.stream()
+                .filter(r -> r.getDriverRating() != null)
+                .mapToInt(Ride::getDriverRating)
+                .average().orElse(0);
+        return DriverRatingDto.builder()
+                .average(Math.round(avg * 10.0) / 10.0)
+                .count(count)
+                .build();
     }
 
     public List<Ride> getMyRides(Long userId, String role) {
@@ -128,5 +169,16 @@ public class BookingService {
             return rideRepository.findByDriverId(userId);
         }
         return rideRepository.findByRiderId(userId);
+    }
+
+    // Best-effort flip of a driver's availability in driver-service. Never lets
+    // a driver-service hiccup break the ride flow.
+    private void setDriverAvailability(Long driverId, boolean available) {
+        if (driverId == null) return;
+        try {
+            driverServiceClient.updateAvailability(driverId, available);
+        } catch (Exception e) {
+            System.err.println("Could not update driver availability: " + e.getMessage());
+        }
     }
 }

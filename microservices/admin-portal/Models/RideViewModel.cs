@@ -12,4 +12,6 @@ public class RideViewModel
     public DateTime? RequestTime { get; set; }
     public DateTime? StartTime { get; set; }
     public DateTime? EndTime { get; set; }
+    public int? DriverRating { get; set; }
+    public string? DriverFeedback { get; set; }
 }

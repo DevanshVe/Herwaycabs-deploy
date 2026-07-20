@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { bookingService } from '../services/api';
+import StarRating from './StarRating';
 
 const STATUS_STYLES = {
     PAID: 'bg-green-100 text-green-700',
@@ -102,6 +103,12 @@ export default function RideHistoryModal({ open, onClose, userId, role }) {
                                     <span className="text-gray-500">{isDriver ? `Rider #${r.riderId}` : (r.driverId ? `Driver #${r.driverId}` : 'No driver')}</span>
                                     <span className="font-bold text-gray-900">₹{Math.round(r.fare)}</span>
                                 </div>
+                                {r.driverRating ? (
+                                    <div className="mt-2 flex items-center gap-2">
+                                        <StarRating value={r.driverRating} size="w-3.5 h-3.5" />
+                                        {r.driverFeedback && <span className="text-xs text-gray-400 truncate">"{r.driverFeedback}"</span>}
+                                    </div>
+                                ) : null}
                             </div>
                         ))
                     )}

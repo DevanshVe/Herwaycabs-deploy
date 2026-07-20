@@ -1,11 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { authService } from '../services/api';
+import { authService, kycService } from '../services/api';
 import Toast from '../components/Toast';
 import Logo from '../components/Logo';
 
 const homePath = (role) => (role === 'DRIVER' ? '/driver-home' : role === 'ADMIN' ? '/admin' : '/rider-home');
+
+const DOC_TYPES = [
+    { value: 'DRIVING_LICENSE', label: 'Driving License' },
+    { value: 'AADHAAR_CARD', label: 'Aadhaar Card' },
+    { value: 'PAN_CARD', label: 'PAN Card' },
+    { value: 'VEHICLE_REGISTRATION', label: 'Vehicle Registration' },
+];
+const DOC_LABEL = Object.fromEntries(DOC_TYPES.map((d) => [d.value, d.label]));
+const STATUS_BADGE = {
+    APPROVED: 'bg-green-100 text-green-700',
+    PENDING: 'bg-amber-100 text-amber-700',
+    REJECTED: 'bg-red-100 text-red-700',
+};
 
 const Profile = () => {
     const { user, updateUser, logout } = useAuth();
@@ -21,7 +34,36 @@ const Profile = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [savingPassword, setSavingPassword] = useState(false);
 
+    // KYC documents
+    const [docs, setDocs] = useState([]);
+    const [docType, setDocType] = useState(DOC_TYPES[0].value);
+    const [docFile, setDocFile] = useState(null);
+    const [uploadingDoc, setUploadingDoc] = useState(false);
+
     const initial = (user?.name || 'U').charAt(0).toUpperCase();
+
+    const loadDocs = () => {
+        if (!user?.id) return;
+        kycService.getUserDocuments(user.id).then(setDocs).catch(() => { });
+    };
+    useEffect(loadDocs, [user?.id]);
+
+    const uploadDoc = async (e) => {
+        e.preventDefault();
+        if (!docFile) { setNotice({ type: 'error', message: 'Please choose a file to upload.' }); return; }
+        setUploadingDoc(true);
+        try {
+            await kycService.uploadDocument(user.id, docType, docFile);
+            setDocFile(null);
+            e.target.reset?.();
+            setNotice({ type: 'success', message: 'Document uploaded — pending review.' });
+            loadDocs();
+        } catch (err) {
+            setNotice({ type: 'error', message: err.response?.data?.message || 'Could not upload the document. Please try again.' });
+        } finally {
+            setUploadingDoc(false);
+        }
+    };
 
     const saveProfile = async (e) => {
         e.preventDefault();
@@ -141,6 +183,43 @@ const Profile = () => {
                         </button>
                     </div>
                 </form>
+
+                {/* KYC documents */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
+                    <div>
+                        <h2 className="text-lg font-bold text-gray-900">Identity documents (KYC)</h2>
+                        <p className="text-sm text-gray-500">Upload documents for verification. Drivers must be verified before going online.</p>
+                    </div>
+
+                    {docs.length > 0 && (
+                        <ul className="space-y-2">
+                            {docs.map((d) => (
+                                <li key={d.id} className="flex items-center justify-between gap-3 border border-gray-100 rounded-xl p-3">
+                                    <div className="min-w-0">
+                                        <p className="font-semibold text-gray-800 text-sm">{DOC_LABEL[d.type] || d.type}</p>
+                                        {d.verificationNotes && <p className="text-xs text-gray-400 truncate">{d.verificationNotes}</p>}
+                                    </div>
+                                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${STATUS_BADGE[d.status] || 'bg-gray-100 text-gray-600'}`}>{d.status}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+
+                    <form onSubmit={uploadDoc} className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-end">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600 mb-1">Document type</label>
+                            <select value={docType} onChange={(e) => setDocType(e.target.value)}
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white">
+                                {DOC_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                            </select>
+                            <input type="file" accept="image/*,application/pdf" onChange={(e) => setDocFile(e.target.files[0])} className="mt-2 w-full text-sm" />
+                        </div>
+                        <button type="submit" disabled={uploadingDoc}
+                            className="px-6 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-accent transition disabled:opacity-60">
+                            {uploadingDoc ? 'Uploading…' : 'Upload'}
+                        </button>
+                    </form>
+                </div>
             </main>
         </div>
     );

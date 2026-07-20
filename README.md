@@ -21,10 +21,12 @@ A production-style, cloud-native **cab-booking platform built for women riders a
 
 ## Features
 
-- **Ride lifecycle** — request → driver match → OTP‑verified start → complete → payment (simulated).
+- **Ride lifecycle** — request → driver match → OTP‑verified start → complete → payment (simulated) → rating.
 - **Live driver tracking** — the rider sees the assigned driver move on the map with a live ETA.
+- **Ratings** — riders rate drivers (1–5 + note) after a trip; a driver's average shows on the ride card, history, and admin.
+- **Busy state** — a driver is marked unavailable while on a trip and freed when it completes or cancels.
 - **Women‑only** — sign‑up is gated to female users by design; drivers must be admin‑verified before going online.
-- **Accounts** — JWT auth, editable **profile**, **change password**, and a **forgot/reset‑password** flow.
+- **Accounts** — JWT auth, editable **profile**, **change password**, a **forgot/reset‑password** flow, and **KYC** document upload.
 - **Ride history** — searchable, filterable history for riders and drivers.
 - **Admin console** — driver verification plus drivers / users / rides views with search, filters & pagination.
 
@@ -137,6 +139,8 @@ npm run dev
 | GET  | `/api/bookings/all` | Booking (all rides — admin ride history) |
 | POST | `/api/bookings/request` | Booking |
 | GET  | `/api/bookings/my-rides` | Booking (a rider's / driver's own ride history) |
+| POST | `/api/bookings/{id}/rate` | Booking (rider rates the driver, 1–5 + note) |
+| GET  | `/api/bookings/driver/{id}/rating` | Booking (a driver's average rating) |
 | GET  | `/api/drivers` | Driver (all drivers) |
 | GET  | `/api/drivers/available` | Driver |
 | GET  | `/api/drivers/pending` | Driver |

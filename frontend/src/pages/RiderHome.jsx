@@ -7,6 +7,7 @@ import { bookingService, driverService } from '../services/api';
 import Toast from '../components/Toast';
 import RideHistoryModal from '../components/RideHistoryModal';
 import Logo from '../components/Logo';
+import StarRating from '../components/StarRating';
 import { pickupIcon as greenIcon, dropIcon as redIcon, driverIcon } from '../utils/mapIcons';
 
 // Centers the map on the user's location: once automatically, then on each recenter click.
@@ -45,9 +46,13 @@ const RiderHome = () => {
     const [notice, setNotice] = useState(null);
     const [assignedDriver, setAssignedDriver] = useState(null);
     const [driverLocation, setDriverLocation] = useState(null);
+    const [driverRatingInfo, setDriverRatingInfo] = useState(null);
     const [showHistory, setShowHistory] = useState(false);
+    const [ratingValue, setRatingValue] = useState(0);
+    const [ratingFeedback, setRatingFeedback] = useState('');
+    const [ratingSubmitting, setRatingSubmitting] = useState(false);
 
-    // Fetch the assigned driver's details (and initial position) for the rider
+    // Fetch the assigned driver's details (position + rating) for the rider
     useEffect(() => {
         if (ride?.driverId) {
             driverService.getDriverById(ride.driverId).then((d) => {
@@ -56,11 +61,27 @@ const RiderHome = () => {
                     setDriverLocation([d.currentLatitude, d.currentLongitude]);
                 }
             }).catch(() => { });
+            bookingService.getDriverRating(ride.driverId).then(setDriverRatingInfo).catch(() => { });
         } else {
             setAssignedDriver(null);
             setDriverLocation(null);
+            setDriverRatingInfo(null);
         }
     }, [ride?.driverId]);
+
+    const submitRating = async () => {
+        if (ratingValue < 1) { setNotice({ type: 'error', message: 'Please pick a star rating first.' }); return; }
+        setRatingSubmitting(true);
+        try {
+            const updated = await bookingService.rateRide(ride.id, ratingValue, ratingFeedback.trim());
+            setRide(updated);
+            setNotice({ type: 'success', message: 'Thanks for your feedback!' });
+        } catch (err) {
+            setNotice({ type: 'error', message: err.response?.data?.message || 'Could not submit your rating. Please try again.' });
+        } finally {
+            setRatingSubmitting(false);
+        }
+    };
 
     useEffect(() => {
         navigator.geolocation.getCurrentPosition(
@@ -277,6 +298,11 @@ const RiderHome = () => {
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-bold text-gray-900 truncate">{assignedDriver.name}</p>
                                                 <p className="text-xs text-gray-500">Your driver{assignedDriver.phoneNumber ? ` · ${assignedDriver.phoneNumber}` : ''}</p>
+                                                {driverRatingInfo && (
+                                                    <p className="text-xs font-bold text-yellow-600 mt-0.5">
+                                                        {driverRatingInfo.count > 0 ? `★ ${driverRatingInfo.average} · ${driverRatingInfo.count} trip${driverRatingInfo.count === 1 ? '' : 's'}` : '★ New driver'}
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                         {driverLocation && (() => {
@@ -321,8 +347,27 @@ const RiderHome = () => {
                                         <div className="w-14 h-14 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
                                             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
                                         </div>
-                                        <p className="text-gray-900 font-bold mb-3">You've arrived. Thank you!</p>
-                                        <button onClick={() => { setRide(null); setPickup(''); setDrop(''); }} className="text-sm font-bold text-primary hover:underline">Book another ride</button>
+                                        <p className="text-gray-900 font-bold mb-4">You've arrived. Thank you!</p>
+
+                                        {ride.driverRating ? (
+                                            <div className="mb-4">
+                                                <p className="text-xs text-gray-500 mb-1">You rated this trip</p>
+                                                <div className="flex justify-center"><StarRating value={ride.driverRating} size="w-6 h-6" /></div>
+                                            </div>
+                                        ) : (
+                                            <div className="mb-4 bg-gray-50 rounded-xl p-4">
+                                                <p className="text-sm font-semibold text-gray-700 mb-2">Rate your driver</p>
+                                                <div className="flex justify-center mb-3"><StarRating value={ratingValue} onChange={setRatingValue} /></div>
+                                                <textarea value={ratingFeedback} onChange={(e) => setRatingFeedback(e.target.value)} rows={2} placeholder="Add a note (optional)"
+                                                    className="w-full text-sm p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary outline-none resize-none mb-3" />
+                                                <button onClick={submitRating} disabled={ratingSubmitting}
+                                                    className="w-full bg-primary text-white py-2.5 rounded-lg font-bold hover:bg-accent transition disabled:opacity-60">
+                                                    {ratingSubmitting ? 'Submitting…' : 'Submit rating'}
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        <button onClick={() => { setRide(null); setPickup(''); setDrop(''); setRatingValue(0); setRatingFeedback(''); }} className="text-sm font-bold text-primary hover:underline">Book another ride</button>
                                     </div>
                                 )}
                             </div>

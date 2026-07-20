@@ -40,4 +40,8 @@ public class Ride {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String otp;
+
+    // Rider's rating of the driver for this ride (1-5) + optional note.
+    private Integer driverRating;
+    private String driverFeedback;
 }
