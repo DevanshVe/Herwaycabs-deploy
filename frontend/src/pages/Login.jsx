@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
+import Logo from '../components/Logo';
 
 // Inline eye icons (no external icon lib needed)
 const EyeIcon = () => (
@@ -54,9 +55,12 @@ const Login = () => {
         <div className="flex items-center justify-center min-h-screen bg-background border-t-4 border-primary">
             <div className="flex w-full max-w-4xl bg-white shadow-2xl rounded-2xl overflow-hidden">
                 {/* Left Side - Image/Branding */}
-                <div className="hidden md:flex flex-col justify-center items-center w-1/2 bg-primary text-white p-12">
+                <div className="hidden md:flex flex-col justify-center items-center w-1/2 bg-gradient-to-br from-primary to-accent text-white p-12">
+                    <div className="bg-white/15 rounded-2xl p-4 mb-5 backdrop-blur-sm">
+                        <Logo className="w-16 h-16" />
+                    </div>
                     <h1 className="text-4xl font-extrabold mb-2 tracking-tight">HerWayCabs</h1>
-                    <p className="text-lg text-white/90 text-center">Your premium ride awaits. Reliable, fast, and secure.</p>
+                    <p className="text-lg text-white/90 text-center">Safe rides, by women, for women. Reliable, fast, and secure.</p>
                 </div>
 
                 {/* Right Side - Form */}
@@ -80,6 +84,9 @@ const Login = () => {
                                     className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-primary transition">
                                     {showPassword ? <EyeOffIcon /> : <EyeIcon />}
                                 </button>
+                            </div>
+                            <div className="text-right mt-1.5">
+                                <Link to="/forgot-password" className="text-sm text-accent font-semibold hover:underline">Forgot password?</Link>
                             </div>
                         </div>
                         {error && <div className="p-3 bg-red-100 text-red-700 rounded text-sm">{error}</div>}

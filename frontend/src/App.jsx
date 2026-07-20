@@ -5,6 +5,9 @@ import Register from './pages/Register';
 import RiderHome from './pages/RiderHome';
 import DriverHome from './pages/DriverHome';
 import AdminDashboard from './pages/AdminDashboard';
+import Profile from './pages/Profile';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -12,10 +15,17 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* Protected Routes */}
       <Route element={<ProtectedRoute allowedRoles={['RIDER']} />}>
         <Route path="/rider-home" element={<RiderHome />} />
+      </Route>
+
+      {/* Profile — any signed-in user */}
+      <Route element={<ProtectedRoute allowedRoles={['RIDER', 'DRIVER', 'ADMIN']} />}>
+        <Route path="/profile" element={<Profile />} />
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={['DRIVER']} />}>

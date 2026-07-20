@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { bookingService, driverService } from '../services/api';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import Toast from '../components/Toast';
 import RideHistoryModal from '../components/RideHistoryModal';
+import Logo from '../components/Logo';
 import { pickupIcon as greenIcon, dropIcon as redIcon } from '../utils/mapIcons';
 
 const DriverHome = () => {
@@ -112,8 +114,9 @@ const DriverHome = () => {
             <Toast notice={notice} onClose={() => setNotice(null)} />
 
             <header className="bg-white shadow-sm p-5 flex justify-between items-center z-10">
-                <div className="flex items-center gap-4">
-                    <h1 className="text-2xl font-bold tracking-tight text-primary">HerWayCabs Driver</h1>
+                <div className="flex items-center gap-3">
+                    <Logo className="w-9 h-9" />
+                    <h1 className="text-2xl font-bold tracking-tight text-primary">HerWayCabs <span className="font-light text-gray-400">Driver</span></h1>
                     <button onClick={toggleOnline}
                         className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${isOnline ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}>
                         {isOnline ? 'Online' : 'Go Online'}
@@ -123,9 +126,12 @@ const DriverHome = () => {
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                     </span>}
                 </div>
-                <div className="flex items-center gap-4">
-                    <p className="font-medium text-gray-700 hidden sm:block">{user?.name}</p>
+                <div className="flex items-center gap-3 sm:gap-4">
                     <button onClick={() => setShowHistory(true)} className="text-gray-600 font-semibold text-sm hover:text-primary transition">History</button>
+                    <Link to="/profile" title="Profile" className="flex items-center gap-2 hover:opacity-80 transition">
+                        <span className="font-medium text-gray-700 hidden sm:block">{user?.name}</span>
+                        <span className="w-9 h-9 rounded-full bg-gradient-to-br from-pink-400 to-primary text-white flex items-center justify-center font-bold">{user?.name?.charAt(0).toUpperCase() || 'D'}</span>
+                    </Link>
                     <button onClick={logout} className="text-accent font-semibold text-sm hover:underline">Logout</button>
                 </div>
             </header>

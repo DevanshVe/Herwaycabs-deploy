@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useAuth } from '../context/AuthContext';
 import { bookingService, driverService } from '../services/api';
 import Toast from '../components/Toast';
 import RideHistoryModal from '../components/RideHistoryModal';
-import { pickupIcon as greenIcon, dropIcon as redIcon } from '../utils/mapIcons';
+import Logo from '../components/Logo';
+import { pickupIcon as greenIcon, dropIcon as redIcon, driverIcon } from '../utils/mapIcons';
 
 // Centers the map on the user's location: once automatically, then on each recenter click.
 function MapController({ center, recenterSignal }) {
@@ -18,6 +20,15 @@ function MapController({ center, recenterSignal }) {
         if (recenterSignal > 0 && center) map.setView(center, 15);
     }, [recenterSignal]); // eslint-disable-line react-hooks/exhaustive-deps
     return null;
+}
+
+// Great-circle distance in km between two [lat, lng] points.
+function distanceKm(a, b) {
+    if (!a || !b) return null;
+    const R = 6371, toRad = (d) => (d * Math.PI) / 180;
+    const dLat = toRad(b[0] - a[0]), dLon = toRad(b[1] - a[1]);
+    const s = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a[0])) * Math.cos(toRad(b[0])) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
 }
 
 const RiderHome = () => {
@@ -33,14 +44,21 @@ const RiderHome = () => {
     const [recenterSignal, setRecenterSignal] = useState(0);
     const [notice, setNotice] = useState(null);
     const [assignedDriver, setAssignedDriver] = useState(null);
+    const [driverLocation, setDriverLocation] = useState(null);
     const [showHistory, setShowHistory] = useState(false);
 
-    // Fetch the assigned driver's details so we can show them to the rider
+    // Fetch the assigned driver's details (and initial position) for the rider
     useEffect(() => {
         if (ride?.driverId) {
-            driverService.getDriverById(ride.driverId).then(setAssignedDriver).catch(() => { });
+            driverService.getDriverById(ride.driverId).then((d) => {
+                setAssignedDriver(d);
+                if (d?.currentLatitude != null && d?.currentLongitude != null) {
+                    setDriverLocation([d.currentLatitude, d.currentLongitude]);
+                }
+            }).catch(() => { });
         } else {
             setAssignedDriver(null);
+            setDriverLocation(null);
         }
     }, [ride?.driverId]);
 
@@ -65,6 +83,15 @@ const RiderHome = () => {
                     const myRides = await bookingService.getMyRides(user.id, user.role);
                     const updated = myRides.find(r => r.id === ride.id);
                     if (updated) setRide(updated);
+                    // Live driver position while the driver is en route
+                    if (ride.driverId && ['DRIVER_ASSIGNED', 'STARTED'].includes(ride.status)) {
+                        try {
+                            const d = await driverService.getDriverById(ride.driverId);
+                            if (d?.currentLatitude != null && d?.currentLongitude != null) {
+                                setDriverLocation([d.currentLatitude, d.currentLongitude]);
+                            }
+                        } catch { /* keep last known position */ }
+                    }
                 } catch (err) { console.error('Polling error', err); }
             }, 3000);
         }
@@ -143,19 +170,22 @@ const RiderHome = () => {
             {/* Header */}
             <header className="bg-white/80 backdrop-blur-md shadow-sm p-4 flex justify-between items-center z-10 absolute top-0 w-full">
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                        <span className="text-white font-bold">H</span>
-                    </div>
+                    <Logo className="w-9 h-9" />
                     <h1 className="text-xl font-bold text-primary tracking-tight">HerWayCabs</h1>
                 </div>
-                <div className="flex items-center gap-3">
-                    <div className="text-right hidden sm:block">
-                        <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
-                        <p className="text-xs text-gray-500">Rider</p>
-                    </div>
+                <div className="flex items-center gap-2 sm:gap-3">
                     <button onClick={() => setShowHistory(true)} className="text-gray-600 hover:text-primary px-3 py-2 rounded-full text-sm font-medium transition">
                         History
                     </button>
+                    <Link to="/profile" title="Profile" className="flex items-center gap-2 hover:opacity-80 transition">
+                        <div className="text-right hidden sm:block">
+                            <p className="text-sm font-semibold text-gray-900 leading-tight">{user?.name}</p>
+                            <p className="text-xs text-gray-500">Rider</p>
+                        </div>
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-pink-400 to-primary text-white flex items-center justify-center font-bold">
+                            {user?.name?.charAt(0).toUpperCase() || 'R'}
+                        </div>
+                    </Link>
                     <button onClick={logout} className="bg-secondary hover:bg-pink-200 text-accent px-4 py-2 rounded-full text-sm font-medium transition">
                         Logout
                     </button>
@@ -190,6 +220,9 @@ const RiderHome = () => {
                         <>
                             <Marker position={[ride.pickupLatitude, ride.pickupLongitude]} icon={greenIcon}><Popup>Pickup: {ride.pickupLocation}</Popup></Marker>
                             <Marker position={[ride.dropLatitude, ride.dropLongitude]} icon={redIcon}><Popup>Drop: {ride.dropLocation}</Popup></Marker>
+                            {driverLocation && ['DRIVER_ASSIGNED', 'STARTED'].includes(ride.status) && (
+                                <Marker position={driverLocation} icon={driverIcon}><Popup>Your driver is here</Popup></Marker>
+                            )}
                         </>
                     )}
                 </MapContainer>
@@ -238,12 +271,26 @@ const RiderHome = () => {
                                 </div>
 
                                 {assignedDriver && ['DRIVER_ASSIGNED', 'STARTED'].includes(ride.status) && (
-                                    <div className="flex items-center gap-3 bg-pink-50 border border-pink-100 rounded-xl p-3">
-                                        <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">{assignedDriver.name?.charAt(0) || 'D'}</div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-bold text-gray-900 truncate">{assignedDriver.name}</p>
-                                            <p className="text-xs text-gray-500">Your driver{assignedDriver.phoneNumber ? ` · ${assignedDriver.phoneNumber}` : ''}</p>
+                                    <div className="bg-pink-50 border border-pink-100 rounded-xl p-3 space-y-2">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">{assignedDriver.name?.charAt(0) || 'D'}</div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-bold text-gray-900 truncate">{assignedDriver.name}</p>
+                                                <p className="text-xs text-gray-500">Your driver{assignedDriver.phoneNumber ? ` · ${assignedDriver.phoneNumber}` : ''}</p>
+                                            </div>
                                         </div>
+                                        {driverLocation && (() => {
+                                            const target = ride.status === 'STARTED' ? [ride.dropLatitude, ride.dropLongitude] : [ride.pickupLatitude, ride.pickupLongitude];
+                                            const km = distanceKm(driverLocation, target);
+                                            if (km == null) return null;
+                                            const min = Math.max(1, Math.round((km / 22) * 60)); // ~22 km/h city average
+                                            return (
+                                                <div className="flex items-center gap-2 text-xs font-bold text-primary bg-white rounded-lg px-2.5 py-1.5">
+                                                    <span className="relative flex h-2 w-2"><span className="animate-ping absolute h-full w-full rounded-full bg-primary opacity-60"></span><span className="relative rounded-full h-2 w-2 bg-primary"></span></span>
+                                                    {ride.status === 'STARTED' ? `~${min} min to destination · ${km.toFixed(1)} km` : `Arriving in ~${min} min · ${km.toFixed(1)} km away`}
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
                                 )}
 

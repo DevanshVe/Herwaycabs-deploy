@@ -19,6 +19,15 @@ A production-style, cloud-native **cab-booking platform built for women riders a
 
 ---
 
+## Features
+
+- **Ride lifecycle** — request → driver match → OTP‑verified start → complete → payment (simulated).
+- **Live driver tracking** — the rider sees the assigned driver move on the map with a live ETA.
+- **Women‑only** — sign‑up is gated to female users by design; drivers must be admin‑verified before going online.
+- **Accounts** — JWT auth, editable **profile**, **change password**, and a **forgot/reset‑password** flow.
+- **Ride history** — searchable, filterable history for riders and drivers.
+- **Admin console** — driver verification plus drivers / users / rides views with search, filters & pagination.
+
 ## Architecture
 
 ```mermaid
@@ -118,6 +127,11 @@ npm run dev
 |---|---|---|
 | POST | `/api/auth/register` | Auth |
 | POST | `/api/auth/authenticate` | Auth |
+| GET  | `/api/auth/profile` | Auth (current user) |
+| PUT  | `/api/auth/profile` | Auth (update name / phone) |
+| POST | `/api/auth/change-password` | Auth (current + new password) |
+| POST | `/api/auth/forgot-password` | Auth (issue reset token) |
+| POST | `/api/auth/reset-password` | Auth (reset via token) |
 | GET  | `/api/auth/users` | Auth (admin listing, no password hashes) |
 | GET  | `/api/bookings/available` | Booking |
 | GET  | `/api/bookings/all` | Booking (all rides — admin ride history) |

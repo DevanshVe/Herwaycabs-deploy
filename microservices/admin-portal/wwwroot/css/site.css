@@ -147,3 +147,33 @@ body {
 .hwc-badge-gray { background: #f3f4f6; color: #6b7280; }
 .hwc-badge-pink { background: #fce7f3; color: #db2777; }
 .hwc-badge-dark { background: #1f2937; color: #fff; }
+
+/* Brand logo image */
+.hwc-logo-img { width: 32px; height: 32px; border-radius: 8px; display: block; }
+
+/* Login hero (two-column) */
+.hwc-login-hero { display: grid; grid-template-columns: 1fr 1fr; max-width: 900px; margin: 2.5rem auto; background: #fff; border-radius: 1.5rem; overflow: hidden; box-shadow: 0 20px 60px rgba(219,39,119,.12); border: 1px solid #fce7f3; }
+.hwc-login-brand { background: linear-gradient(140deg, #db2777, #9d174d); color: #fff; padding: 3rem 2.5rem; display: flex; flex-direction: column; justify-content: center; }
+.hwc-login-brand-logo { width: 62px; height: 62px; margin-bottom: 1.25rem; filter: drop-shadow(0 6px 14px rgba(0,0,0,.25)); }
+.hwc-login-brand h2 { font-size: 1.6rem; font-weight: 800; margin: 0 0 .5rem; }
+.hwc-login-brand > p { color: rgba(255,255,255,.85); margin: 0 0 1.75rem; }
+.hwc-login-points { list-style: none; margin: 0; padding: 0; display: grid; gap: .75rem; }
+.hwc-login-points li { position: relative; padding-left: 1.75rem; color: rgba(255,255,255,.92); font-weight: 500; font-size: .95rem; }
+.hwc-login-points li::before { content: "✓"; position: absolute; left: 0; top: -1px; width: 1.15rem; height: 1.15rem; background: rgba(255,255,255,.2); border-radius: 50%; font-size: .7rem; display: flex; align-items: center; justify-content: center; }
+.hwc-login-panel { padding: 3rem 2.5rem; display: flex; flex-direction: column; justify-content: center; }
+.hwc-login-panel .hwc-login-head { text-align: left; }
+@media (max-width: 720px) { .hwc-login-hero { grid-template-columns: 1fr; margin: 1rem auto; } .hwc-login-brand { display: none; } }
+
+/* Dashboard hero band */
+.hwc-hero-band { display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: linear-gradient(135deg, #db2777, #9d174d); color: #fff; border-radius: 1.25rem; padding: 1.75rem 2rem; margin-bottom: 1.75rem; box-shadow: 0 10px 30px rgba(219,39,119,.2); }
+.hwc-hero-band h1 { font-weight: 800; margin: 0 0 .25rem; letter-spacing: -.02em; }
+.hwc-hero-band p { margin: 0; color: rgba(255,255,255,.85); }
+.hwc-hero-stat { text-align: center; background: rgba(255,255,255,.15); border-radius: 1rem; padding: .75rem 1.35rem; }
+.hwc-hero-num { display: block; font-size: 2rem; font-weight: 800; line-height: 1; }
+.hwc-hero-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: rgba(255,255,255,.85); }
+
+/* Subtle entrance animation */
+@keyframes hwcFadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.hwc-main > main > * { animation: hwcFadeUp .35s ease both; }
+.hwc-login-hero { animation: hwcFadeUp .4s ease both; }
+@media (prefers-reduced-motion: reduce) { .hwc-main > main > *, .hwc-login-hero { animation: none; } }

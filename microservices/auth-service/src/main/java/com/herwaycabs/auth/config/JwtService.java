@@ -42,6 +42,24 @@ public class JwtService {
         return buildToken(extraClaims, userDetails, jwtExpiration);
     }
 
+    // Short-lived, single-purpose token for password reset (15 minutes).
+    private static final long RESET_TOKEN_EXPIRATION = 1000 * 60 * 15;
+
+    public String generatePasswordResetToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "reset");
+        return buildToken(claims, userDetails, RESET_TOKEN_EXPIRATION);
+    }
+
+    public boolean isPasswordResetToken(String token) {
+        try {
+            Object type = extractClaim(token, c -> c.get("type"));
+            return "reset".equals(type) && !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
         User user = (User) userDetails;
         extraClaims.put("role", user.getRole());

@@ -4,6 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - HerWayCabs Admin</title>
+    <link rel="icon" type="image/svg+xml" href="~/logo.svg" />
+    <meta name="theme-color" content="#db2777" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
@@ -11,7 +13,7 @@
         <nav class="hwc-navbar">
             <div class="container hwc-nav-inner">
                 <a class="hwc-brand" asp-controller="Admin" asp-action="Index">
-                    <span class="hwc-logo">H</span>
+                    <img src="~/logo.svg" class="hwc-logo-img" alt="" width="32" height="32" />
                     <span>HerWayCabs <span class="hwc-brand-sub">Admin</span></span>
                 </a>
                 @if (User.Identity?.IsAuthenticated == true)

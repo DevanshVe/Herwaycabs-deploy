@@ -7,9 +7,15 @@
     var gateway = Configuration["ApiSettings:GatewayUrl"];
 }
 
-<div class="hwc-page-head">
-    <h1>Driver Verifications</h1>
-    <p>Review and approve drivers waiting to go online.</p>
+<div class="hwc-hero-band">
+    <div>
+        <h1>Driver Verifications</h1>
+        <p>Review and approve drivers waiting to go online.</p>
+    </div>
+    <div class="hwc-hero-stat">
+        <span class="hwc-hero-num">@(Model?.Count ?? 0)</span>
+        <span class="hwc-hero-label">Pending</span>
+    </div>
 </div>
 
 @if (TempData["Msg"] != null)

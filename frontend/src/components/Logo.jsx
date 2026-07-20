@@ -1,0 +1,25 @@
+import React from 'react';
+
+// HerWayCabs mark — a pink taxi badge. Scales with the given className.
+export default function Logo({ className = 'w-8 h-8' }) {
+    return (
+        <svg viewBox="0 0 64 64" className={className} fill="none" role="img" aria-label="HerWayCabs">
+            <defs>
+                <linearGradient id="hwcLogoGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#f472b6" />
+                    <stop offset="1" stopColor="#db2777" />
+                </linearGradient>
+            </defs>
+            <rect width="64" height="64" rx="16" fill="url(#hwcLogoGrad)" />
+            <rect x="27" y="19" width="10" height="5" rx="1.5" fill="#fff" />
+            <rect x="12" y="34" width="40" height="12" rx="4.5" fill="#fff" />
+            <path d="M20 34 v-6.5 a3 3 0 0 1 3-3 h12.5 l6.5 9.5 z" fill="#fff" />
+            <path d="M23.5 28.5 h9 v5.5 h-9 z" fill="#db2777" opacity="0.32" />
+            <path d="M35.5 28.5 l3.8 5.5 h-3.8 z" fill="#db2777" opacity="0.32" />
+            <circle cx="22" cy="47" r="4.2" fill="#831843" />
+            <circle cx="22" cy="47" r="1.7" fill="#fff" />
+            <circle cx="43" cy="47" r="4.2" fill="#831843" />
+            <circle cx="43" cy="47" r="1.7" fill="#fff" />
+        </svg>
+    );
+}

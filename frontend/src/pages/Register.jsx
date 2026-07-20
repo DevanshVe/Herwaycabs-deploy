@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { driverService } from '../services/api';
+import Logo from '../components/Logo';
 
 // Inline eye icons (no external icon lib needed)
 const EyeIcon = () => (
@@ -104,9 +105,12 @@ const Register = () => {
         <div className="flex items-center justify-center min-h-screen bg-background border-t-4 border-primary py-8">
             <div className="flex w-full max-w-4xl bg-white shadow-2xl rounded-2xl overflow-hidden">
                 {/* Left Side - Image/Branding */}
-                <div className="hidden md:flex flex-col justify-center items-center w-1/2 bg-primary text-white p-12">
+                <div className="hidden md:flex flex-col justify-center items-center w-1/2 bg-gradient-to-br from-primary to-accent text-white p-12">
+                    <div className="bg-white/15 rounded-2xl p-4 mb-5 backdrop-blur-sm">
+                        <Logo className="w-16 h-16" />
+                    </div>
                     <h1 className="text-4xl font-extrabold mb-2 tracking-tight">HerWayCabs</h1>
-                    <p className="text-lg text-white/90 text-center">Start your journey with the most premium cab service.</p>
+                    <p className="text-lg text-white/90 text-center">Safe rides, by women, for women. Start your journey today.</p>
                 </div>
 
                 <div className="w-full md:w-1/2 p-8 md:p-12">

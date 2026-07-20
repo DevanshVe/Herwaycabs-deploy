@@ -3,12 +3,22 @@
     ViewData["Title"] = "Sign in";
 }
 
-<div class="hwc-login">
-    <div class="hwc-login-card">
+<div class="hwc-login-hero">
+    <div class="hwc-login-brand">
+        <img src="~/logo.svg" class="hwc-login-brand-logo" alt="HerWayCabs" />
+        <h2>HerWayCabs Admin</h2>
+        <p>Safe rides, by women, for women.</p>
+        <ul class="hwc-login-points">
+            <li>Review &amp; approve driver documents</li>
+            <li>Manage drivers, users &amp; rides</li>
+            <li>Keep every journey safe</li>
+        </ul>
+    </div>
+
+    <div class="hwc-login-panel">
         <div class="hwc-login-head">
-            <div class="hwc-logo hwc-logo-lg">H</div>
-            <h1>HerWayCabs Admin</h1>
-            <p>Sign in to manage driver verifications.</p>
+            <h1>Welcome back</h1>
+            <p>Sign in to the admin console.</p>
         </div>
 
         <form asp-controller="Account" asp-action="Login" method="post">
