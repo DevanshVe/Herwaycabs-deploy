@@ -60,4 +60,8 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+// Lightweight, anonymous health check (fast 200 — set this as Render's
+// Health Check Path so deploys don't depend on the 302 login redirect).
+app.MapGet("/healthz", () => Results.Text("OK"));
+
 app.Run();
