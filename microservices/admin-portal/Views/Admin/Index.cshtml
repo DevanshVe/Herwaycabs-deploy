@@ -12,6 +12,19 @@
     <p>Review and approve drivers waiting to go online.</p>
 </div>
 
+@if (TempData["Msg"] != null)
+{
+    <div class="hwc-flash hwc-flash-ok">@TempData["Msg"]</div>
+}
+@if (TempData["Err"] != null)
+{
+    <div class="hwc-flash hwc-flash-err">@TempData["Err"]</div>
+}
+@if (ViewBag.LoadError == true)
+{
+    <div class="hwc-flash hwc-flash-err">Couldn't load drivers — the driver service may be waking up. Refresh in a moment.</div>
+}
+
 @if (Model == null || !Model.Any())
 {
     <div class="hwc-empty">

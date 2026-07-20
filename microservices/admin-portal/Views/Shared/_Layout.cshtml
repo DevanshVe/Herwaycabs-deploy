@@ -14,7 +14,15 @@
                 <a class="hwc-brand" asp-controller="Admin" asp-action="Index">
                     <span class="hwc-logo">H</span> HerWayCabs <span class="hwc-brand-sub">Admin</span>
                 </a>
-                <a class="nav-link" asp-controller="Admin" asp-action="Index">Driver Verifications</a>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="hwc-nav-right">
+                        <span class="hwc-user">@User.Identity.Name</span>
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="hwc-logout-form">
+                            <button type="submit" class="hwc-logout-btn">Logout</button>
+                        </form>
+                    </div>
+                }
             </div>
         </nav>
     </header>

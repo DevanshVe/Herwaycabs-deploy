@@ -60,3 +60,30 @@ body {
 
 /* Footer */
 .hwc-footer { position: absolute; bottom: 0; width: 100%; height: 60px; line-height: 60px; background: #fff; border-top: 1px solid #fce7f3; font-size: .85rem; color: var(--hwc-muted); }
+
+/* Nav right (logged in) */
+.hwc-nav-right { display: flex; align-items: center; gap: 1rem; }
+.hwc-user { font-weight: 600; color: var(--hwc-ink); }
+.hwc-logout-form { margin: 0; }
+.hwc-logout-btn { background: transparent; border: 1.5px solid #fbcfe8; color: var(--hwc-primary); padding: .4rem .9rem; border-radius: .6rem; font-weight: 700; cursor: pointer; }
+.hwc-logout-btn:hover { background: var(--hwc-primary); color: #fff; }
+
+/* Login */
+.hwc-login { display: flex; justify-content: center; padding: 3rem 1rem; }
+.hwc-login-card { background: #fff; border: 1px solid #fce7f3; border-radius: 1.25rem; box-shadow: 0 10px 40px rgba(219,39,119,.10); padding: 2.5rem; width: 100%; max-width: 420px; }
+.hwc-login-head { text-align: center; margin-bottom: 1.75rem; }
+.hwc-logo-lg { width: 54px; height: 54px; font-size: 1.6rem; border-radius: 14px; margin: 0 auto .9rem; }
+.hwc-login-head h1 { font-weight: 800; font-size: 1.5rem; margin: 0 0 .25rem; }
+.hwc-login-head p { color: var(--hwc-muted); margin: 0; font-size: .95rem; }
+.hwc-label { display: block; font-size: .8rem; font-weight: 700; color: #6b7280; margin: 0 0 .35rem; }
+.hwc-input { width: 100%; padding: .7rem .9rem; border: 1px solid #e5e7eb; border-radius: .7rem; margin-bottom: 1.1rem; font-size: 1rem; outline: none; transition: border-color .2s, box-shadow .2s; }
+.hwc-input:focus { border-color: var(--hwc-primary); box-shadow: 0 0 0 3px rgba(219,39,119,.12); }
+.hwc-btn-full { width: 100%; margin-top: .25rem; }
+.hwc-form-error { color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; border-radius: .7rem; padding: .6rem .9rem; margin-bottom: 1rem; font-size: .9rem; }
+.hwc-form-error.validation-summary-valid { display: none; }
+.hwc-form-error ul { margin: 0; padding-left: 1.1rem; }
+
+/* Flash messages */
+.hwc-flash { padding: .8rem 1rem; border-radius: .7rem; margin-bottom: 1.25rem; font-weight: 600; }
+.hwc-flash-ok { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+.hwc-flash-err { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }

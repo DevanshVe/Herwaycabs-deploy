@@ -15,7 +15,8 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
-        return View();
+        // Entry point — the Admin dashboard ([Authorize]) redirects to login if needed.
+        return RedirectToAction("Index", "Admin");
     }
 
     public IActionResult Privacy()
