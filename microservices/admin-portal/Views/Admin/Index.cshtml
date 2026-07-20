@@ -1,51 +1,59 @@
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
 @model List<admin_portal.Models.DriverViewModel>
 
 @{
-    ViewData["Title"] = "Admin Dashboard";
+    ViewData["Title"] = "Driver Verifications";
+    var gateway = Configuration["ApiSettings:GatewayUrl"];
 }
 
-<div class="container mt-5">
-    <h1 class="mb-4">Pending Driver Verifications</h1>
-
-    @if (Model == null || !Model.Any())
-    {
-        <div class="alert alert-info">No pending verifications.</div>
-    }
-    else
-    {
-        <table class="table table-striped table-hover">
-            <thead class="thead-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Gender</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var driver in Model)
-                {
-                    <tr>
-                        <td>@driver.Id</td>
-                        <td>@driver.Name</td>
-                        <td>@driver.Gender</td>
-                        <td>@driver.Email</td>
-                        <td>@driver.PhoneNumber</td>
-                        <td>
-                            <form asp-action="Verify" method="post">
-                                <input type="hidden" name="id" value="@driver.Id" />
-                                @if (!string.IsNullOrEmpty(driver.DocumentPath))
-                                {
-                                    <a href="http://localhost:8080/api/drivers/@driver.Id/document" target="_blank" class="btn btn-info btn-sm">View Doc</a>
-                                }
-                                <button type="submit" class="btn btn-success btn-sm">Verify Documents</button>
-                            </form>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
+<div class="hwc-page-head">
+    <h1>Driver Verifications</h1>
+    <p>Review and approve drivers waiting to go online.</p>
 </div>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="hwc-empty">
+        <div class="hwc-empty-icon">&#10003;</div>
+        <p>All caught up — no drivers pending verification.</p>
+    </div>
+}
+else
+{
+    <div class="hwc-grid">
+        @foreach (var driver in Model)
+        {
+            <div class="hwc-card">
+                <div class="hwc-card-top">
+                    <div class="hwc-avatar">@(string.IsNullOrEmpty(driver.Name) ? "D" : driver.Name.Substring(0, 1).ToUpper())</div>
+                    <div>
+                        <div class="hwc-card-name">@driver.Name</div>
+                        <div class="hwc-card-id">Driver #@driver.Id</div>
+                    </div>
+                </div>
+
+                <dl class="hwc-meta">
+                    <div><dt>Email</dt><dd>@driver.Email</dd></div>
+                    <div><dt>Phone</dt><dd>@driver.PhoneNumber</dd></div>
+                    <div><dt>Gender</dt><dd>@driver.Gender</dd></div>
+                </dl>
+
+                <div class="hwc-card-actions">
+                    @if (!string.IsNullOrEmpty(driver.DocumentPath))
+                    {
+                        <a href="@gateway/drivers/@driver.Id/document" target="_blank" rel="noopener" class="hwc-btn-outline">View Document</a>
+                    }
+                    else
+                    {
+                        <span class="hwc-nodoc">No document</span>
+                    }
+                    <form asp-action="Verify" method="post" class="hwc-verify-form">
+                        <input type="hidden" name="id" value="@driver.Id" />
+                        <button type="submit" class="hwc-btn">Approve Driver</button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+}

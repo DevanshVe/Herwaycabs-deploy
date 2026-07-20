@@ -2,26 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useAuth } from '../context/AuthContext';
-import { bookingService } from '../services/api';
+import { bookingService, driverService } from '../services/api';
 import Toast from '../components/Toast';
-
-// Fix Leaflet default marker icon
-import L from 'leaflet';
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-
-L.Marker.prototype.options.icon = L.icon({ iconUrl: icon, shadowUrl: iconShadow, iconSize: [25, 41], iconAnchor: [12, 41] });
-
-const greenIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-});
-const redIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-});
+import { pickupIcon as greenIcon, dropIcon as redIcon } from '../utils/mapIcons';
 
 // Centers the map on the user's location: once automatically, then on each recenter click.
 function MapController({ center, recenterSignal }) {
@@ -48,6 +31,16 @@ const RiderHome = () => {
     const [submitting, setSubmitting] = useState(false);
     const [recenterSignal, setRecenterSignal] = useState(0);
     const [notice, setNotice] = useState(null);
+    const [assignedDriver, setAssignedDriver] = useState(null);
+
+    // Fetch the assigned driver's details so we can show them to the rider
+    useEffect(() => {
+        if (ride?.driverId) {
+            driverService.getDriverById(ride.driverId).then(setAssignedDriver).catch(() => { });
+        } else {
+            setAssignedDriver(null);
+        }
+    }, [ride?.driverId]);
 
     useEffect(() => {
         navigator.geolocation.getCurrentPosition(
@@ -236,6 +229,16 @@ const RiderHome = () => {
                                     <div className="animate-pulse w-2 h-2 rounded-full bg-current"></div>
                                     <span className="font-bold tracking-wide text-sm uppercase">{ride.status.replace('_', ' ')}</span>
                                 </div>
+
+                                {assignedDriver && ['DRIVER_ASSIGNED', 'STARTED'].includes(ride.status) && (
+                                    <div className="flex items-center gap-3 bg-pink-50 border border-pink-100 rounded-xl p-3">
+                                        <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">{assignedDriver.name?.charAt(0) || 'D'}</div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-bold text-gray-900 truncate">{assignedDriver.name}</p>
+                                            <p className="text-xs text-gray-500">Your driver{assignedDriver.phoneNumber ? ` · ${assignedDriver.phoneNumber}` : ''}</p>
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="space-y-3 text-sm">
                                     <div><p className="text-xs text-gray-500 uppercase font-bold">From</p><p className="font-medium text-gray-900">{ride.pickupLocation}</p></div>

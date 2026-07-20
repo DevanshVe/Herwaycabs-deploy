@@ -107,6 +107,11 @@ export const bookingService = {
 };
 
 export const driverService = {
+    getDriverById: async (id) => {
+        const response = await api.get(`/drivers/${id}`);
+        return response.data;
+    },
+
     toggleAvailability: async (userId, currentStatus) => {
         const newStatus = !currentStatus;
 
