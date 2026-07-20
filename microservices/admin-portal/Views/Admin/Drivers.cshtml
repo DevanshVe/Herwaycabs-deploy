@@ -21,7 +21,22 @@ else if (Model == null || !Model.Any())
 }
 else
 {
-    <div class="hwc-table-wrap">
+    <div class="hwc-toolbar" id="driversToolbar">
+        <input type="search" class="hwc-search" data-search-input placeholder="Search by name, email or phone…" aria-label="Search drivers" />
+        <select class="hwc-filter" data-filter="verified" aria-label="Filter by verification">
+            <option value="">All statuses</option>
+            <option value="true">Verified</option>
+            <option value="false">Pending</option>
+        </select>
+        <select class="hwc-filter" data-filter="available" aria-label="Filter by availability">
+            <option value="">All availability</option>
+            <option value="true">Online</option>
+            <option value="false">Offline</option>
+        </select>
+        <span class="hwc-count"><strong data-count>@Model.Count</strong> shown</span>
+    </div>
+
+    <div class="hwc-table-wrap" data-tools data-toolbar="#driversToolbar" data-page-size="10">
         <table class="hwc-table">
             <thead>
                 <tr><th>Driver</th><th>Contact</th><th>Gender</th><th>Status</th></tr>
@@ -29,7 +44,7 @@ else
             <tbody>
                 @foreach (var d in Model)
                 {
-                    <tr>
+                    <tr data-verified="@d.IsVerified.ToString().ToLower()" data-available="@d.IsAvailable.ToString().ToLower()" data-search="@($"{d.Name} {d.Email} {d.PhoneNumber}")">
                         <td>
                             <div class="hwc-cell-user">
                                 <div class="hwc-avatar-sm">@(string.IsNullOrEmpty(d.Name) ? "D" : d.Name.Substring(0, 1).ToUpper())</div>
@@ -66,5 +81,6 @@ else
                 }
             </tbody>
         </table>
+        <div class="hwc-no-match" data-empty style="display:none;">No drivers match your search.</div>
     </div>
 }

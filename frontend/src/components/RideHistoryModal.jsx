@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { bookingService } from '../services/api';
 
 const STATUS_STYLES = {
@@ -10,34 +10,49 @@ const STATUS_STYLES = {
     REQUESTED: 'bg-yellow-100 text-yellow-700',
 };
 
+const STATUS_OPTIONS = ['ALL', 'REQUESTED', 'DRIVER_ASSIGNED', 'STARTED', 'COMPLETED', 'PAID', 'CANCELLED'];
+
 const fmtDate = (s) => {
     if (!s) return '';
     try { return new Date(s).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }); }
     catch { return ''; }
 };
 
-// Shared ride-history overlay for riders and drivers.
+// Shared ride-history overlay for riders and drivers (search + status filter).
 export default function RideHistoryModal({ open, onClose, userId, role }) {
     const [rides, setRides] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [query, setQuery] = useState('');
+    const [status, setStatus] = useState('ALL');
 
     useEffect(() => {
         if (!open) return;
         setLoading(true); setError('');
+        setQuery(''); setStatus('ALL');
         bookingService.getMyRides(userId, role)
             .then((r) => setRides([...r].sort((a, b) => b.id - a.id)))
             .catch(() => setError('Could not load your ride history — please try again in a moment.'))
             .finally(() => setLoading(false));
     }, [open, userId, role]);
 
-    if (!open) return null;
-
     const isDriver = role === 'DRIVER';
+
+    const filtered = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        return rides.filter((r) => {
+            if (status !== 'ALL' && r.status !== status) return false;
+            if (!q) return true;
+            const hay = `#${r.id} ${r.pickupLocation || ''} ${r.dropLocation || ''} ${r.riderId || ''} ${r.driverId || ''}`.toLowerCase();
+            return hay.includes(q);
+        });
+    }, [rides, query, status]);
+
+    if (!open) return null;
 
     return (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/40" onClick={onClose}>
-            <div className="bg-white w-full max-w-lg max-h-[80vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white w-full max-w-lg max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-5 border-b border-gray-100">
                     <div>
                         <h2 className="text-xl font-bold text-gray-900">Ride History</h2>
@@ -45,6 +60,21 @@ export default function RideHistoryModal({ open, onClose, userId, role }) {
                     </div>
                     <button onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-700 text-3xl leading-none">&times;</button>
                 </div>
+
+                {!loading && !error && rides.length > 0 && (
+                    <div className="flex gap-2 p-4 border-b border-gray-100 bg-gray-50">
+                        <input type="search" value={query} onChange={(e) => setQuery(e.target.value)}
+                            placeholder="Search location or id…"
+                            className="flex-1 min-w-0 px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary outline-none" />
+                        <select value={status} onChange={(e) => setStatus(e.target.value)}
+                            className="px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                            {STATUS_OPTIONS.map((s) => (
+                                <option key={s} value={s}>{s === 'ALL' ? 'All statuses' : s.replace('_', ' ')}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+
                 <div className="flex-1 overflow-y-auto p-5 space-y-3">
                     {loading ? (
                         <p className="text-center text-gray-500 py-10">Loading…</p>
@@ -52,8 +82,10 @@ export default function RideHistoryModal({ open, onClose, userId, role }) {
                         <p className="text-center text-red-500 py-10">{error}</p>
                     ) : rides.length === 0 ? (
                         <p className="text-center text-gray-500 py-10">No rides yet.</p>
+                    ) : filtered.length === 0 ? (
+                        <p className="text-center text-gray-500 py-10">No rides match your search.</p>
                     ) : (
-                        rides.map((r) => (
+                        filtered.map((r) => (
                             <div key={r.id} className="border border-gray-100 rounded-xl p-4 hover:shadow-sm transition">
                                 <div className="flex justify-between items-start mb-2">
                                     <span className="text-xs font-bold text-gray-400">#{r.id} · {fmtDate(r.requestTime)}</span>

@@ -21,7 +21,18 @@ else if (Model == null || !Model.Any())
 }
 else
 {
-    <div class="hwc-table-wrap">
+    <div class="hwc-toolbar" id="usersToolbar">
+        <input type="search" class="hwc-search" data-search-input placeholder="Search by name, email or phone…" aria-label="Search users" />
+        <select class="hwc-filter" data-filter="role" aria-label="Filter by role">
+            <option value="">All roles</option>
+            <option value="RIDER">Riders</option>
+            <option value="DRIVER">Drivers</option>
+            <option value="ADMIN">Admins</option>
+        </select>
+        <span class="hwc-count"><strong data-count>@Model.Count</strong> shown</span>
+    </div>
+
+    <div class="hwc-table-wrap" data-tools data-toolbar="#usersToolbar" data-page-size="10">
         <table class="hwc-table">
             <thead>
                 <tr><th>User</th><th>Contact</th><th>Role</th><th>Gender</th></tr>
@@ -29,7 +40,9 @@ else
             <tbody>
                 @foreach (var u in Model)
                 {
-                    <tr>
+                    var role = (u.Role ?? "RIDER").ToUpper();
+                    var roleClass = role == "ADMIN" ? "hwc-badge-dark" : role == "DRIVER" ? "hwc-badge-blue" : "hwc-badge-pink";
+                    <tr data-role="@role" data-search="@($"{u.Name} {u.Email} {u.PhoneNumber}")">
                         <td>
                             <div class="hwc-cell-user">
                                 <div class="hwc-avatar-sm">@(string.IsNullOrEmpty(u.Name) ? "U" : u.Name.Substring(0, 1).ToUpper())</div>
@@ -43,17 +56,12 @@ else
                             <div>@u.Email</div>
                             <div class="hwc-cell-sub">@u.PhoneNumber</div>
                         </td>
-                        <td>
-                            @{
-                                var role = (u.Role ?? "RIDER").ToUpper();
-                                var roleClass = role == "ADMIN" ? "hwc-badge-dark" : role == "DRIVER" ? "hwc-badge-blue" : "hwc-badge-pink";
-                            }
-                            <span class="hwc-badge @roleClass">@role</span>
-                        </td>
+                        <td><span class="hwc-badge @roleClass">@role</span></td>
                         <td>@u.Gender</td>
                     </tr>
                 }
             </tbody>
         </table>
+        <div class="hwc-no-match" data-empty style="display:none;">No users match your search.</div>
     </div>
 }

@@ -32,7 +32,21 @@ else if (Model == null || !Model.Any())
 }
 else
 {
-    <div class="hwc-table-wrap">
+    <div class="hwc-toolbar" id="ridesToolbar">
+        <input type="search" class="hwc-search" data-search-input placeholder="Search by id, location or user…" aria-label="Search rides" />
+        <select class="hwc-filter" data-filter="status" aria-label="Filter by status">
+            <option value="">All statuses</option>
+            <option value="REQUESTED">Requested</option>
+            <option value="DRIVER_ASSIGNED">Driver assigned</option>
+            <option value="STARTED">Started</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="PAID">Paid</option>
+            <option value="CANCELLED">Cancelled</option>
+        </select>
+        <span class="hwc-count"><strong data-count>@Model.Count</strong> shown</span>
+    </div>
+
+    <div class="hwc-table-wrap" data-tools data-toolbar="#ridesToolbar" data-page-size="10">
         <table class="hwc-table">
             <thead>
                 <tr><th>Ride</th><th>Route</th><th>Rider / Driver</th><th>Fare</th><th>Status</th></tr>
@@ -40,7 +54,8 @@ else
             <tbody>
                 @foreach (var r in Model.OrderByDescending(x => x.Id))
                 {
-                    <tr>
+                    var status = (r.Status ?? "").ToUpper();
+                    <tr data-status="@status" data-search="@($"#{r.Id} {r.PickupLocation} {r.DropLocation} rider {r.RiderId} driver {r.DriverId}")">
                         <td>
                             <div class="hwc-cell-name">#@r.Id</div>
                             <div class="hwc-cell-sub">@(r.RequestTime?.ToString("dd MMM yyyy, HH:mm") ?? "—")</div>
@@ -54,10 +69,11 @@ else
                             <div class="hwc-cell-sub">Driver @(r.DriverId.HasValue ? "#" + r.DriverId : "unassigned")</div>
                         </td>
                         <td><strong>&#8377;@Math.Round(r.Fare)</strong></td>
-                        <td><span class="hwc-badge @BadgeClass(r.Status)">@((r.Status ?? "").Replace("_", " "))</span></td>
+                        <td><span class="hwc-badge @BadgeClass(r.Status)">@(status.Replace("_", " "))</span></td>
                     </tr>
                 }
             </tbody>
         </table>
+        <div class="hwc-no-match" data-empty style="display:none;">No rides match your search.</div>
     </div>
 }
