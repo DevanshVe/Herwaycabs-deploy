@@ -219,13 +219,22 @@ const RiderHome = () => {
         }
     };
 
+    // Clear the current ride and return to a fresh booking form.
+    const startFresh = () => {
+        setRide(null);
+        setPickup(''); setDrop('');
+        setPickupCoords(null); setDropCoords(null);
+        setRatingValue(0); setRatingFeedback('');
+        setRouteLine(null); setRouteInfo(null);
+        prevStatus.current = null;
+    };
+
     const handleCancelRide = async () => {
         if (!ride) return;
         if (!window.confirm('Cancel this ride request?')) return;
         try {
             await bookingService.cancelRide(ride.id);
-            setRide(null); setPickup(''); setDrop('');
-            prevStatus.current = null;
+            startFresh();
             setNotice({ type: 'info', message: 'Your ride request was cancelled.' });
             notify('Ride cancelled', 'info');
         } catch (error) {
@@ -396,7 +405,7 @@ const RiderHome = () => {
 
                                 <div className="bg-gray-50 p-4 rounded-xl flex justify-between items-center">
                                     <div><p className="text-xs text-gray-500 uppercase font-bold">Fare · {ride.cabType === 'LUXURY' ? 'Luxury' : 'Economy'}</p><p className="text-xl font-bold text-gray-900">₹{Math.round(ride.fare)}</p></div>
-                                    {ride.otp && <div className="text-right"><p className="text-xs text-gray-500 uppercase font-bold">OTP</p><p className="text-2xl font-mono font-bold tracking-widest text-black">{ride.otp}</p></div>}
+                                    {ride.otp && !['COMPLETED', 'PAID', 'CANCELLED'].includes(ride.status) && <div className="text-right"><p className="text-xs text-gray-500 uppercase font-bold">OTP</p><p className="text-2xl font-mono font-bold tracking-widest text-black">{ride.otp}</p></div>}
                                 </div>
 
                                 {ride.status === 'REQUESTED' && (
@@ -436,7 +445,18 @@ const RiderHome = () => {
                                             </div>
                                         )}
 
-                                        <button onClick={() => { setRide(null); setPickup(''); setDrop(''); setRatingValue(0); setRatingFeedback(''); }} className="text-sm font-bold text-primary hover:underline">Book another ride</button>
+                                        <button onClick={startFresh} className="text-sm font-bold text-primary hover:underline">Book another ride</button>
+                                    </div>
+                                )}
+
+                                {ride.status === 'CANCELLED' && (
+                                    <div className="text-center">
+                                        <div className="w-14 h-14 bg-gray-100 text-gray-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                                            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                        </div>
+                                        <p className="text-gray-900 font-bold mb-1">This ride was cancelled.</p>
+                                        <p className="text-sm text-gray-500 mb-4">No charge was made.</p>
+                                        <button onClick={startFresh} className="w-full bg-primary text-white py-3 rounded-xl font-bold hover:bg-accent transition">Book a new ride</button>
                                     </div>
                                 )}
                             </div>
