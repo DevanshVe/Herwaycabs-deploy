@@ -49,13 +49,15 @@ else
     <div class="hwc-table-wrap" data-tools data-toolbar="#ridesToolbar" data-page-size="10">
         <table class="hwc-table">
             <thead>
-                <tr><th>Ride</th><th>Route</th><th>Rider / Driver</th><th>Fare</th><th>Rating</th><th>Status</th></tr>
+                <tr><th>Ride</th><th>Route</th><th>Rider / Driver</th><th>Cab</th><th>Fare</th><th>Rating</th><th>Status</th></tr>
             </thead>
             <tbody>
                 @foreach (var r in Model.OrderByDescending(x => x.Id))
                 {
                     var status = (r.Status ?? "").ToUpper();
-                    <tr data-status="@status" data-search="@($"#{r.Id} {r.PickupLocation} {r.DropLocation} rider {r.RiderId} driver {r.DriverId}")">
+                    var cab = (r.CabType ?? "ECONOMY").ToUpper();
+                    var cabClass = cab == "LUXURY" ? "hwc-badge-dark" : "hwc-badge-gray";
+                    <tr data-status="@status" data-search="@($"#{r.Id} {r.PickupLocation} {r.DropLocation} rider {r.RiderId} driver {r.DriverId} {cab}")">
                         <td>
                             <div class="hwc-cell-name">#@r.Id</div>
                             <div class="hwc-cell-sub">@(r.RequestTime?.ToString("dd MMM yyyy, HH:mm") ?? "—")</div>
@@ -68,6 +70,7 @@ else
                             <div>Rider #@(r.RiderId?.ToString() ?? "—")</div>
                             <div class="hwc-cell-sub">Driver @(r.DriverId.HasValue ? "#" + r.DriverId : "unassigned")</div>
                         </td>
+                        <td><span class="hwc-badge @cabClass">@(cab == "LUXURY" ? "Luxury" : "Economy")</span></td>
                         <td><strong>&#8377;@Math.Round(r.Fare)</strong></td>
                         <td>
                             @if (r.DriverRating.HasValue)

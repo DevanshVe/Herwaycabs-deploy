@@ -12,6 +12,7 @@ const STATUS_STYLES = {
 };
 
 const STATUS_OPTIONS = ['ALL', 'REQUESTED', 'DRIVER_ASSIGNED', 'STARTED', 'COMPLETED', 'PAID', 'CANCELLED'];
+const PAGE_SIZE = 5;
 
 const fmtDate = (s) => {
     if (!s) return '';
@@ -26,16 +27,19 @@ export default function RideHistoryModal({ open, onClose, userId, role }) {
     const [error, setError] = useState('');
     const [query, setQuery] = useState('');
     const [status, setStatus] = useState('ALL');
+    const [page, setPage] = useState(1);
 
     useEffect(() => {
         if (!open) return;
         setLoading(true); setError('');
-        setQuery(''); setStatus('ALL');
+        setQuery(''); setStatus('ALL'); setPage(1);
         bookingService.getMyRides(userId, role)
             .then((r) => setRides([...r].sort((a, b) => b.id - a.id)))
             .catch(() => setError('Could not load your ride history — please try again in a moment.'))
             .finally(() => setLoading(false));
     }, [open, userId, role]);
+
+    useEffect(() => { setPage(1); }, [query, status]);
 
     const isDriver = role === 'DRIVER';
 
@@ -48,6 +52,10 @@ export default function RideHistoryModal({ open, onClose, userId, role }) {
             return hay.includes(q);
         });
     }, [rides, query, status]);
+
+    const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    const safePage = Math.min(page, pageCount);
+    const pageItems = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
     if (!open) return null;
 
@@ -86,7 +94,7 @@ export default function RideHistoryModal({ open, onClose, userId, role }) {
                     ) : filtered.length === 0 ? (
                         <p className="text-center text-gray-500 py-10">No rides match your search.</p>
                     ) : (
-                        filtered.map((r) => (
+                        pageItems.map((r) => (
                             <div key={r.id} className="border border-gray-100 rounded-xl p-4 hover:shadow-sm transition">
                                 <div className="flex justify-between items-start mb-2">
                                     <span className="text-xs font-bold text-gray-400">#{r.id} · {fmtDate(r.requestTime)}</span>
@@ -113,6 +121,16 @@ export default function RideHistoryModal({ open, onClose, userId, role }) {
                         ))
                     )}
                 </div>
+
+                {!loading && !error && filtered.length > PAGE_SIZE && (
+                    <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-gray-50">
+                        <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={safePage <= 1}
+                            className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 bg-white disabled:opacity-40 hover:border-primary transition">Prev</button>
+                        <span className="text-xs text-gray-500">Page {safePage} of {pageCount}</span>
+                        <button onClick={() => setPage((p) => Math.min(pageCount, p + 1))} disabled={safePage >= pageCount}
+                            className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 bg-white disabled:opacity-40 hover:border-primary transition">Next</button>
+                    </div>
+                )}
             </div>
         </div>
     );

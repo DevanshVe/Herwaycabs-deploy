@@ -22,7 +22,10 @@ A production-style, cloud-native **cab-booking platform built for women riders a
 ## Features
 
 - **Ride lifecycle** — request → driver match → OTP‑verified start → complete → payment (simulated) → rating.
+- **Cab types** — **Economy** and **Luxury** with different base + per‑km pricing.
+- **Smart booking** — location **autocomplete** (Nominatim), an on‑map **route preview** with distance/ETA (OSRM), and a live fare estimate per cab type.
 - **Live driver tracking** — the rider sees the assigned driver move on the map with a live ETA.
+- **In‑app notifications** — a bell surfaces ride events (accepted, started, paid, rated).
 - **Ratings** — riders rate drivers (1–5 + note) after a trip; a driver's average shows on the ride card, history, and admin.
 - **Busy state** — a driver is marked unavailable while on a trip and freed when it completes or cancels.
 - **Women‑only** — sign‑up is gated to female users by design; drivers must be admin‑verified before going online.

@@ -6,6 +6,7 @@ public class RideViewModel
     public long? RiderId { get; set; }
     public long? DriverId { get; set; }
     public string? Status { get; set; }
+    public string? CabType { get; set; }
     public string? PickupLocation { get; set; }
     public string? DropLocation { get; set; }
     public double Fare { get; set; }

@@ -14,4 +14,5 @@ public class RideRequestDto {
     private String dropLocation;
     private Double dropLatitude;
     private Double dropLongitude;
+    private String cabType; // "ECONOMY" (default) or "LUXURY"
 }

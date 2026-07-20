@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
 import { bookingService, driverService } from '../services/api';
 import Toast from '../components/Toast';
 import RideHistoryModal from '../components/RideHistoryModal';
 import Logo from '../components/Logo';
 import StarRating from '../components/StarRating';
+import LocationInput from '../components/LocationInput';
+import NotificationBell from '../components/NotificationBell';
 import { pickupIcon as greenIcon, dropIcon as redIcon, driverIcon } from '../utils/mapIcons';
 
 // Centers the map on the user's location: once automatically, then on each recenter click.
@@ -34,6 +37,7 @@ function distanceKm(a, b) {
 
 const RiderHome = () => {
     const { user, logout } = useAuth();
+    const { add: notify } = useNotifications();
     const [currentPosition, setCurrentPosition] = useState([51.505, -0.09]);
     const [locating, setLocating] = useState(true);
     const [pickup, setPickup] = useState('');
@@ -51,6 +55,14 @@ const RiderHome = () => {
     const [ratingValue, setRatingValue] = useState(0);
     const [ratingFeedback, setRatingFeedback] = useState('');
     const [ratingSubmitting, setRatingSubmitting] = useState(false);
+    const [cabType, setCabType] = useState('ECONOMY');
+    const [routeLine, setRouteLine] = useState(null);
+    const [routeInfo, setRouteInfo] = useState(null);
+    const prevStatus = useRef(null);
+
+    // Straight-line distance for the fare estimate (matches the backend formula).
+    const estOrigin = pickupCoords || currentPosition;
+    const estKm = (estOrigin && dropCoords) ? distanceKm(estOrigin, dropCoords) : null;
 
     // Fetch the assigned driver's details (position + rating) for the rider
     useEffect(() => {
@@ -69,6 +81,37 @@ const RiderHome = () => {
         }
     }, [ride?.driverId]);
 
+    // Notify on key ride-status transitions (driver assigned / trip started)
+    useEffect(() => {
+        const s = ride?.status;
+        if (!ride) { prevStatus.current = null; return; }
+        if (s && s !== prevStatus.current) {
+            if (s === 'DRIVER_ASSIGNED') notify('A driver accepted your ride 🚗', 'success');
+            else if (s === 'STARTED') notify('Your trip has started — enjoy the ride!', 'info');
+            prevStatus.current = s;
+        }
+    }, [ride?.status]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Fetch a road route (OSRM) for the current origin → destination
+    useEffect(() => {
+        const o = ride ? [ride.pickupLatitude, ride.pickupLongitude] : pickupCoords;
+        const d = ride ? [ride.dropLatitude, ride.dropLongitude] : dropCoords;
+        if (!o || !d || o[0] == null || d[0] == null) { setRouteLine(null); setRouteInfo(null); return; }
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${o[1]},${o[0]};${d[1]},${d[0]}?overview=full&geometries=geojson`);
+                const data = await res.json();
+                const route = data?.routes?.[0];
+                if (route && !cancelled) {
+                    setRouteLine(route.geometry.coordinates.map(([lon, lat]) => [lat, lon]));
+                    setRouteInfo({ km: route.distance / 1000, min: Math.round(route.duration / 60) });
+                }
+            } catch { if (!cancelled) { setRouteLine(null); setRouteInfo(null); } }
+        })();
+        return () => { cancelled = true; };
+    }, [ride?.id, pickupCoords, dropCoords]); // eslint-disable-line react-hooks/exhaustive-deps
+
     const submitRating = async () => {
         if (ratingValue < 1) { setNotice({ type: 'error', message: 'Please pick a star rating first.' }); return; }
         setRatingSubmitting(true);
@@ -76,6 +119,7 @@ const RiderHome = () => {
             const updated = await bookingService.rateRide(ride.id, ratingValue, ratingFeedback.trim());
             setRide(updated);
             setNotice({ type: 'success', message: 'Thanks for your feedback!' });
+            notify('Thanks for rating your driver!', 'success');
         } catch (err) {
             setNotice({ type: 'error', message: err.response?.data?.message || 'Could not submit your rating. Please try again.' });
         } finally {
@@ -149,10 +193,12 @@ const RiderHome = () => {
             const data = await bookingService.bookRide({
                 pickupLocation: pickup || 'Current Location',
                 pickupLatitude: pLat, pickupLongitude: pLon,
-                dropLocation: drop || 'Pinned drop', dropLatitude: dLat, dropLongitude: dLon
+                dropLocation: drop || 'Pinned drop', dropLatitude: dLat, dropLongitude: dLon,
+                cabType
             }, user.id);
             setRide(data);
             setNotice({ type: 'success', message: `Ride requested — estimated fare ₹${Math.round(data.fare)}. Finding a driver…` });
+            notify(`${cabType === 'LUXURY' ? 'Luxury' : 'Economy'} ride requested · ₹${Math.round(data.fare)}`, 'info');
         } catch (error) {
             const msg = error.response ? (error.response.data?.message || 'Could not request the ride. Please try again.') : 'Cannot reach the server right now — please try again in a moment.';
             setNotice({ type: 'error', message: msg });
@@ -167,6 +213,7 @@ const RiderHome = () => {
             const updated = await bookingService.payRide(ride.id);
             setRide(updated);
             setNotice({ type: 'success', message: 'Payment successful — thank you for riding with us!' });
+            notify('Payment successful 🎉', 'success');
         } catch (error) {
             setNotice({ type: 'error', message: 'Payment could not be completed. Please try again.' });
         }
@@ -178,7 +225,9 @@ const RiderHome = () => {
         try {
             await bookingService.cancelRide(ride.id);
             setRide(null); setPickup(''); setDrop('');
+            prevStatus.current = null;
             setNotice({ type: 'info', message: 'Your ride request was cancelled.' });
+            notify('Ride cancelled', 'info');
         } catch (error) {
             setNotice({ type: 'error', message: 'Could not cancel the ride. Please try again.' });
         }
@@ -195,6 +244,7 @@ const RiderHome = () => {
                     <h1 className="text-xl font-bold text-primary tracking-tight">HerWayCabs</h1>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-3">
+                    <NotificationBell />
                     <button onClick={() => setShowHistory(true)} className="text-gray-600 hover:text-primary px-3 py-2 rounded-full text-sm font-medium transition">
                         History
                     </button>
@@ -224,6 +274,8 @@ const RiderHome = () => {
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
+
+                    {routeLine && <Polyline positions={routeLine} pathOptions={{ color: '#db2777', weight: 5, opacity: 0.75 }} />}
 
                     {!ride && (
                         <Marker position={pickupCoords || currentPosition} icon={greenIcon} draggable
@@ -264,18 +316,35 @@ const RiderHome = () => {
 
                         {!ride ? (
                             <form onSubmit={handleBookRide} className="space-y-4">
-                                <div className="relative">
-                                    <div className="absolute left-3 top-3.5 w-3 h-3 bg-primary rounded-full ring-4 ring-pink-50"></div>
-                                    <input type="text" value={pickup} onChange={e => setPickup(e.target.value)}
-                                        className="pl-10 w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-primary text-gray-800 font-medium placeholder-gray-400"
-                                        placeholder="Current Location" />
+                                <LocationInput value={pickup}
+                                    onChange={(v) => { setPickup(v); setPickupCoords(null); }}
+                                    onSelect={(s) => { setPickup(s.label); setPickupCoords([s.lat, s.lon]); }}
+                                    placeholder="Pickup location" leftDot="w-3 h-3 bg-primary rounded-full ring-4 ring-pink-50" />
+                                <LocationInput value={drop}
+                                    onChange={(v) => { setDrop(v); setDropCoords(null); }}
+                                    onSelect={(s) => { setDrop(s.label); setDropCoords([s.lat, s.lon]); }}
+                                    placeholder="Enter destination" leftDot="w-3 h-3 bg-gray-400 rounded-sm" />
+
+                                {/* Cab type */}
+                                <div className="grid grid-cols-2 gap-2">
+                                    {[{ key: 'ECONOMY', label: 'Economy', base: 50, rate: 15, emoji: '🚗' }, { key: 'LUXURY', label: 'Luxury', base: 100, rate: 28, emoji: '🚙' }].map((c) => {
+                                        const est = estKm != null ? Math.round(Math.max(c.base, estKm * c.rate)) : null;
+                                        const active = cabType === c.key;
+                                        return (
+                                            <button type="button" key={c.key} onClick={() => setCabType(c.key)}
+                                                className={`text-left p-3 rounded-xl border-2 transition ${active ? 'border-primary bg-pink-50' : 'border-gray-100 bg-gray-50 hover:border-pink-200'}`}>
+                                                <div className="text-lg leading-none mb-1">{c.emoji}</div>
+                                                <div className="font-bold text-sm text-gray-900">{c.label}</div>
+                                                <div className="text-xs text-gray-500">{est != null ? `~₹${est}` : `from ₹${c.base}`}</div>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
-                                <div className="relative">
-                                    <div className="absolute left-3 top-3.5 w-3 h-3 bg-gray-400 rounded-sm"></div>
-                                    <input type="text" value={drop} onChange={e => setDrop(e.target.value)}
-                                        className="pl-10 w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-primary text-gray-800 font-medium placeholder-gray-400"
-                                        placeholder="Enter destination" required />
-                                </div>
+
+                                {routeInfo && (
+                                    <p className="text-xs text-gray-500 text-center">Approx {routeInfo.km.toFixed(1)} km · {routeInfo.min} min by road</p>
+                                )}
+
                                 <button type="submit" disabled={submitting}
                                     className="w-full bg-primary text-white py-4 rounded-xl font-bold text-lg hover:bg-accent transition transform active:scale-95 shadow-lg shadow-pink-200 disabled:opacity-60 disabled:cursor-not-allowed">
                                     {submitting ? 'Requesting…' : 'Request Ride'}
@@ -326,7 +395,7 @@ const RiderHome = () => {
                                 </div>
 
                                 <div className="bg-gray-50 p-4 rounded-xl flex justify-between items-center">
-                                    <div><p className="text-xs text-gray-500 uppercase font-bold">Fare</p><p className="text-xl font-bold text-gray-900">₹{Math.round(ride.fare)}</p></div>
+                                    <div><p className="text-xs text-gray-500 uppercase font-bold">Fare · {ride.cabType === 'LUXURY' ? 'Luxury' : 'Economy'}</p><p className="text-xl font-bold text-gray-900">₹{Math.round(ride.fare)}</p></div>
                                     {ride.otp && <div className="text-right"><p className="text-xs text-gray-500 uppercase font-bold">OTP</p><p className="text-2xl font-mono font-bold tracking-widest text-black">{ride.otp}</p></div>}
                                 </div>
 

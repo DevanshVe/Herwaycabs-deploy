@@ -28,5 +28,11 @@ public class Driver {
     private Double currentLatitude;
     private Double currentLongitude;
 
-    private String documentPath;
+    private String documentPath; // original filename (marker that a document exists)
+
+    // Document bytes stored in the DB (Neon) so they survive redeploys — the
+    // container filesystem on Render is ephemeral.
+    @Column(columnDefinition = "bytea")
+    private byte[] documentData;
+    private String documentContentType;
 }

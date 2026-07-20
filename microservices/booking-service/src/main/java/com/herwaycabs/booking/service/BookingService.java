@@ -5,6 +5,7 @@ import com.herwaycabs.booking.dto.DriverDto;
 import com.herwaycabs.booking.dto.DriverRatingDto;
 import com.herwaycabs.booking.dto.RatingRequest;
 import com.herwaycabs.booking.dto.RideRequestDto;
+import com.herwaycabs.booking.model.CabType;
 import com.herwaycabs.booking.model.Ride;
 import com.herwaycabs.booking.model.RideStatus;
 import com.herwaycabs.booking.repository.RideRepository;
@@ -33,15 +34,18 @@ public class BookingService {
     }
 
     public Ride requestRide(Long riderId, RideRequestDto request) {
+        CabType cabType = parseCabType(request.getCabType());
         double fare = fareService.calculateFare(
                 request.getPickupLatitude(),
                 request.getPickupLongitude(),
                 request.getDropLatitude(),
-                request.getDropLongitude());
+                request.getDropLongitude(),
+                cabType);
 
         Ride ride = Ride.builder()
                 .riderId(riderId)
                 .status(RideStatus.REQUESTED)
+                .cabType(cabType)
                 .pickupLocation(request.getPickupLocation())
                 .pickupLatitude(request.getPickupLatitude())
                 .pickupLongitude(request.getPickupLongitude())
@@ -169,6 +173,15 @@ public class BookingService {
             return rideRepository.findByDriverId(userId);
         }
         return rideRepository.findByRiderId(userId);
+    }
+
+    private CabType parseCabType(String raw) {
+        if (raw == null) return CabType.ECONOMY;
+        try {
+            return CabType.valueOf(raw.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return CabType.ECONOMY;
+        }
     }
 
     // Best-effort flip of a driver's availability in driver-service. Never lets

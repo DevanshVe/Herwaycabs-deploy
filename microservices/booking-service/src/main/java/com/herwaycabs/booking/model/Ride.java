@@ -27,6 +27,9 @@ public class Ride {
     @Enumerated(EnumType.STRING)
     private RideStatus status;
 
+    @Enumerated(EnumType.STRING)
+    private CabType cabType;
+
     private String pickupLocation;
     private Double pickupLatitude;
     private Double pickupLongitude;

@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
 import { bookingService, driverService } from '../services/api';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import Toast from '../components/Toast';
 import RideHistoryModal from '../components/RideHistoryModal';
 import Logo from '../components/Logo';
+import NotificationBell from '../components/NotificationBell';
 import { pickupIcon as greenIcon, dropIcon as redIcon } from '../utils/mapIcons';
 
 const DriverHome = () => {
     const { user, logout } = useAuth();
+    const { add: notify } = useNotifications();
     const [availableRides, setAvailableRides] = useState([]);
     const [activeRide, setActiveRide] = useState(null);
     const [otp, setOtp] = useState('');
@@ -81,6 +84,7 @@ const DriverHome = () => {
             const ride = await bookingService.acceptRide(rideId, user.id);
             setActiveRide(ride);
             setNotice({ type: 'success', message: 'Ride accepted! Head to the pickup point.' });
+            notify(`Ride #${ride.id} accepted · ₹${Math.round(ride.fare)}`, 'success');
             fetchRides();
         } catch (error) {
             setNotice({ type: 'error', message: error.response?.data?.message || 'This ride is no longer available.' });
@@ -103,6 +107,7 @@ const DriverHome = () => {
             await bookingService.completeRide(activeRide.id);
             setActiveRide(null);
             setNotice({ type: 'success', message: 'Trip completed. Waiting for the rider to pay.' });
+            notify('Trip completed 🎉 You are back online.', 'success');
             fetchRides();
         } catch (error) {
             setNotice({ type: 'error', message: 'Could not end the trip. Please try again.' });
@@ -127,6 +132,7 @@ const DriverHome = () => {
                     </span>}
                 </div>
                 <div className="flex items-center gap-3 sm:gap-4">
+                    <NotificationBell />
                     <button onClick={() => setShowHistory(true)} className="text-gray-600 font-semibold text-sm hover:text-primary transition">History</button>
                     <Link to="/profile" title="Profile" className="flex items-center gap-2 hover:opacity-80 transition">
                         <span className="font-medium text-gray-700 hidden sm:block">{user?.name}</span>

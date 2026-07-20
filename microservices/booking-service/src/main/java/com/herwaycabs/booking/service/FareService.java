@@ -1,16 +1,24 @@
 package com.herwaycabs.booking.service;
 
+import com.herwaycabs.booking.model.CabType;
 import org.springframework.stereotype.Service;
 
 @Service
 public class FareService {
 
-    private static final double BASE_FARE = 50.0;
-    private static final double PER_KM_RATE = 15.0;
+    // Per cab-type pricing: { base fare, per-km rate }.
+    private double baseFare(CabType type) {
+        return type == CabType.LUXURY ? 100.0 : 50.0;
+    }
 
-    public double calculateFare(double lat1, double lon1, double lat2, double lon2) {
+    private double perKmRate(CabType type) {
+        return type == CabType.LUXURY ? 28.0 : 15.0;
+    }
+
+    public double calculateFare(double lat1, double lon1, double lat2, double lon2, CabType type) {
+        CabType t = (type == null) ? CabType.ECONOMY : type;
         double distanceKm = calculateDistance(lat1, lon1, lat2, lon2);
-        double fare = Math.max(BASE_FARE, distanceKm * PER_KM_RATE);
+        double fare = Math.max(baseFare(t), distanceKm * perKmRate(t));
         return Math.round(fare); // whole rupees — no long decimals on the UI
     }
 

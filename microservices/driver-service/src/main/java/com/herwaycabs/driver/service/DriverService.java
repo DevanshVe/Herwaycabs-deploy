@@ -20,24 +20,12 @@ public class DriverService {
     public Driver uploadDocument(Long driverId, org.springframework.web.multipart.MultipartFile file)
             throws java.io.IOException {
         Driver driver = getDriverById(driverId);
-        java.io.File directory = new java.io.File(uploadDir).getAbsoluteFile();
-        if (!directory.exists()) {
-            directory.mkdirs();
-        }
-        String fileName = driverId + "_" + file.getOriginalFilename();
-        java.io.File dest = new java.io.File(directory, fileName);
-        file.transferTo(dest);
-
-        driver.setDocumentPath(dest.getAbsolutePath());
+        // Store the bytes in the DB (durable) instead of the ephemeral disk.
+        driver.setDocumentData(file.getBytes());
+        driver.setDocumentContentType(
+                file.getContentType() != null ? file.getContentType() : "application/octet-stream");
+        driver.setDocumentPath(file.getOriginalFilename()); // marker that a document exists
         return driverRepository.save(driver);
-    }
-
-    public byte[] getDocument(Long driverId) throws java.io.IOException {
-        Driver driver = getDriverById(driverId);
-        if (driver.getDocumentPath() == null) {
-            throw new RuntimeException("No document found for this driver.");
-        }
-        return java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(driver.getDocumentPath()));
     }
 
     public List<Driver> getAvailableDrivers() {

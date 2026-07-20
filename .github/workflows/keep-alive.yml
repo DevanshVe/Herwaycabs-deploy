@@ -27,6 +27,7 @@ jobs:
             "https://herwaycabs-driver-service.onrender.com/actuator/health"
             "https://herwaycabs-payment-service.onrender.com/actuator/health"
             "https://herwaycabs-kyc-service.onrender.com/actuator/health"
+            "https://herwaycabs-admin-portal.onrender.com/Account/Login"
           )
           # Ping all in parallel; a cold service may take up to ~2 min to wake.
           for url in "${services[@]}"; do

@@ -68,8 +68,16 @@ public class DriverController {
     }
 
     @GetMapping("/{id}/document")
-    public ResponseEntity<byte[]> getDocument(@PathVariable Long id) throws java.io.IOException {
-        byte[] image = driverService.getDocument(id);
-        return ResponseEntity.ok().header(org.springframework.http.HttpHeaders.CONTENT_TYPE, "image/jpeg").body(image);
+    public ResponseEntity<byte[]> getDocument(@PathVariable Long id) {
+        Driver driver = driverService.getDriverById(id);
+        byte[] data = driver.getDocumentData();
+        if (data == null || data.length == 0) {
+            return ResponseEntity.notFound().build();
+        }
+        String contentType = driver.getDocumentContentType() != null
+                ? driver.getDocumentContentType() : "application/octet-stream";
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, contentType)
+                .body(data);
     }
 }
