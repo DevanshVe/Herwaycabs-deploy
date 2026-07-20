@@ -15,9 +15,17 @@ const DriverHome = () => {
     const [notice, setNotice] = useState(null);
 
     useEffect(() => {
+        if (!user?.id) return;
+        // Self-heal: guarantee this driver has a record in driver-service. The
+        // sign-up sync can fail if that service was cold. Idempotent (matches
+        // by email), so it never overwrites an existing verified record.
+        driverService.registerDriver({
+            id: user.id, name: user.name, email: user.email,
+            isVerified: false, isAvailable: false,
+        }).catch(() => { });
         if (user?.isAvailable) setIsOnline(true);
         navigator.geolocation.getCurrentPosition(
-            (pos) => { if (user?.id) driverService.updateLocation(user.id, pos.coords.latitude, pos.coords.longitude).catch(() => { }); },
+            (pos) => { driverService.updateLocation(user.id, pos.coords.latitude, pos.coords.longitude).catch(() => { }); },
             () => { }
         );
     }, [user]);

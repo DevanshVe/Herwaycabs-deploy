@@ -17,27 +17,27 @@ public class DriverService : IDriverService
     private string BaseUrl =>
         $"{_configuration["ApiSettings:GatewayUrl"]}/drivers";
 
+    private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
+
     public async Task<List<DriverViewModel>> GetPendingDrivers()
     {
         var response = await _httpClient.GetAsync($"{BaseUrl}/pending");
-
         response.EnsureSuccessStatusCode();
-
         var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<DriverViewModel>>(content, JsonOpts) ?? new List<DriverViewModel>();
+    }
 
-        return JsonSerializer.Deserialize<List<DriverViewModel>>(
-            content,
-            new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            }) ?? new List<DriverViewModel>();
+    public async Task<List<DriverViewModel>> GetAllDrivers()
+    {
+        var response = await _httpClient.GetAsync(BaseUrl);
+        response.EnsureSuccessStatusCode();
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<DriverViewModel>>(content, JsonOpts) ?? new List<DriverViewModel>();
     }
 
     public async Task VerifyDriver(long driverId)
     {
-        var response =
-            await _httpClient.PostAsync($"{BaseUrl}/{driverId}/verify", null);
-
+        var response = await _httpClient.PostAsync($"{BaseUrl}/{driverId}/verify", null);
         response.EnsureSuccessStatusCode();
     }
 }

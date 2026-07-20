@@ -61,12 +61,24 @@ const Register = () => {
             // register returns user data including id
             const data = await register(formData);
 
-            if (formData.role === 'DRIVER' && file && data?.id) {
+            if (formData.role === 'DRIVER' && data?.id) {
                 try {
-                    await driverService.uploadDocument(data.id, file);
+                    // Ensure the driver record exists in driver-service (the
+                    // auth->driver sync can silently fail if that service was
+                    // cold). Idempotent, so it's safe to always call.
+                    await driverService.registerDriver({
+                        id: data.id,
+                        name: formData.name,
+                        email: formData.email,
+                        phoneNumber: formData.phoneNumber,
+                        gender: formData.gender,
+                        isVerified: false,
+                        isAvailable: false,
+                    });
+                    if (file) await driverService.uploadDocument(data.id, file);
                 } catch (upErr) {
-                    console.error('Document upload failed', upErr);
-                    setSuccess('Account created, but the document upload failed — you can re-upload it later from your driver profile.');
+                    console.error('Driver profile setup failed', upErr);
+                    setSuccess('Account created, but setting up your driver profile hit a snag — you can retry from the driver screen.');
                 }
             }
 

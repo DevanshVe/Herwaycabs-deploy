@@ -112,6 +112,13 @@ export const driverService = {
         return response.data;
     },
 
+    // Idempotent (matches by email in driver-service). Used to guarantee a
+    // driver record exists even if the auth->driver sync failed at sign-up.
+    registerDriver: async (driver) => {
+        const response = await api.post('/drivers/register', driver);
+        return response.data;
+    },
+
     toggleAvailability: async (userId, currentStatus) => {
         const newStatus = !currentStatus;
 

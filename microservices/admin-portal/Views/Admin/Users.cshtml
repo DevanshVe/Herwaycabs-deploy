@@ -1,0 +1,59 @@
+@model List<admin_portal.Models.UserViewModel>
+@{
+    ViewData["Title"] = "Users";
+}
+
+<div class="hwc-page-head">
+    <h1>Users</h1>
+    <p>Everyone registered on HerWayCabs — @(Model?.Count ?? 0) total.</p>
+</div>
+
+@if (ViewBag.LoadError == true)
+{
+    <div class="hwc-flash hwc-flash-err">Couldn't load users — the auth service may be waking up. Refresh in a moment.</div>
+}
+else if (Model == null || !Model.Any())
+{
+    <div class="hwc-empty">
+        <div class="hwc-empty-icon" style="background:#fce7f3;color:#db2777;">&#128100;</div>
+        <p>No users yet.</p>
+    </div>
+}
+else
+{
+    <div class="hwc-table-wrap">
+        <table class="hwc-table">
+            <thead>
+                <tr><th>User</th><th>Contact</th><th>Role</th><th>Gender</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var u in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="hwc-cell-user">
+                                <div class="hwc-avatar-sm">@(string.IsNullOrEmpty(u.Name) ? "U" : u.Name.Substring(0, 1).ToUpper())</div>
+                                <div>
+                                    <div class="hwc-cell-name">@u.Name</div>
+                                    <div class="hwc-cell-sub">#@u.Id</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>@u.Email</div>
+                            <div class="hwc-cell-sub">@u.PhoneNumber</div>
+                        </td>
+                        <td>
+                            @{
+                                var role = (u.Role ?? "RIDER").ToUpper();
+                                var roleClass = role == "ADMIN" ? "hwc-badge-dark" : role == "DRIVER" ? "hwc-badge-blue" : "hwc-badge-pink";
+                            }
+                            <span class="hwc-badge @roleClass">@role</span>
+                        </td>
+                        <td>@u.Gender</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

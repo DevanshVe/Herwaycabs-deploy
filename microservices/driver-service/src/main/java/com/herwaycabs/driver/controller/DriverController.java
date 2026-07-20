@@ -16,6 +16,11 @@ public class DriverController {
 
     private final DriverService driverService;
 
+    @GetMapping
+    public ResponseEntity<List<Driver>> getAllDrivers() {
+        return ResponseEntity.ok(driverService.getAllDrivers());
+    }
+
     @GetMapping("/available")
     public ResponseEntity<List<Driver>> getAvailableDrivers() {
         return ResponseEntity.ok(driverService.getAvailableDrivers());

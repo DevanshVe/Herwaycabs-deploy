@@ -20,12 +20,12 @@
 {
     <div class="hwc-flash hwc-flash-err">@TempData["Err"]</div>
 }
+
 @if (ViewBag.LoadError == true)
 {
     <div class="hwc-flash hwc-flash-err">Couldn't load drivers — the driver service may be waking up. Refresh in a moment.</div>
 }
-
-@if (Model == null || !Model.Any())
+else if (Model == null || !Model.Any())
 {
     <div class="hwc-empty">
         <div class="hwc-empty-icon">&#10003;</div>

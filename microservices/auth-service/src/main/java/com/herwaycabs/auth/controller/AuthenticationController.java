@@ -41,4 +41,10 @@ public class AuthenticationController {
                 .role(user.getRole())
                 .build());
     }
+
+    // Admin listing of all users (no password hashes).
+    @GetMapping("/users")
+    public ResponseEntity<java.util.List<com.herwaycabs.auth.dto.UserDto>> getAllUsers() {
+        return ResponseEntity.ok(service.getAllUsers());
+    }
 }

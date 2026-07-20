@@ -17,6 +17,11 @@
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     <div class="hwc-nav-right">
+                        <nav class="hwc-tabs">
+                            <a asp-controller="Admin" asp-action="Index">Verifications</a>
+                            <a asp-controller="Admin" asp-action="Drivers">Drivers</a>
+                            <a asp-controller="Admin" asp-action="Users">Users</a>
+                        </nav>
                         <span class="hwc-user">@User.Identity.Name</span>
                         <form asp-controller="Account" asp-action="Logout" method="post" class="hwc-logout-form">
                             <button type="submit" class="hwc-logout-btn">Logout</button>

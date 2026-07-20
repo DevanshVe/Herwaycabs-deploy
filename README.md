@@ -11,6 +11,7 @@ A production-style, cloud-native **cab-booking platform built for women riders a
 | Component | URL |
 |---|---|
 | Frontend (React) | https://herwaycabs-deploy.vercel.app |
+| Admin Portal (ASP.NET) | https://herwaycabs-admin-portal.onrender.com |
 | API Gateway | https://herwaycabs-api-gateway.onrender.com |
 | Eureka dashboard | https://herwaycabs-discovery.onrender.com |
 
@@ -52,7 +53,7 @@ Every backend service registers with **Eureka** and is reachable only through th
 | Payment Service | Spring Boot + Razorpay | 8083 | Payments (runs in mock mode without keys) |
 | Driver Service | Spring Boot + JPA | 8084 | Drivers, availability, verification, documents |
 | KYC Service | Spring Boot + JPA | 8085 | Document upload / verification |
-| Admin Portal | ASP.NET Core 8 MVC (C#) | 8080 | Driver-verification console *(not yet deployed)* |
+| Admin Portal | ASP.NET Core 8 MVC (C#) | 8080 | Admin console — driver verification, all-drivers & all-users views (cookie auth, ADMIN-only) |
 | Frontend | React 19 + Vite + Tailwind + Leaflet | 5173 | Rider / Driver / Admin UI |
 
 ---
@@ -117,10 +118,13 @@ npm run dev
 |---|---|---|
 | POST | `/api/auth/register` | Auth |
 | POST | `/api/auth/authenticate` | Auth |
+| GET  | `/api/auth/users` | Auth (admin listing, no password hashes) |
 | GET  | `/api/bookings/available` | Booking |
 | POST | `/api/bookings/request` | Booking |
+| GET  | `/api/drivers` | Driver (all drivers) |
 | GET  | `/api/drivers/available` | Driver |
 | GET  | `/api/drivers/pending` | Driver |
+| POST | `/api/drivers/register` | Driver (idempotent by email — used to self-heal the sign-up sync) |
 | POST | `/api/drivers/{id}/verify` | Driver |
 | POST | `/api/kyc/upload` | KYC |
 
@@ -132,6 +136,7 @@ npm run dev
 
 - Each backend service is a **Render Docker web service** (`Root Directory = microservices/<service>`, Dockerfile build, health check `/actuator/health`), with **`SPRING_PROFILES_ACTIVE=render`** so it registers in Eureka under its public `*.onrender.com` host on port 443 — letting the gateway route across services.
 - The frontend is a **Vercel** project (`Root Directory = frontend`, `VITE_API_URL` → gateway URL). SPA routing via `frontend/vercel.json`.
+- The **admin portal** is a Render Docker web service (`Root Directory = microservices/admin-portal`, .NET 8), with `ApiSettings:GatewayUrl` → `<gateway>/api`. It uses cookie authentication and only admits users with the **ADMIN** role. `ForwardedHeaders` is enabled so cookies work behind Render's HTTPS proxy.
 - Databases are **Neon** PostgreSQL, one per service.
 - **`.github/workflows/keep-alive.yml`** pings every service on a schedule to reduce free-tier cold starts.
 

@@ -9,12 +9,15 @@ namespace admin_portal.Controllers;
 public class AdminController : Controller
 {
     private readonly IDriverService _driverService;
+    private readonly IAuthApiService _authService;
 
-    public AdminController(IDriverService driverService)
+    public AdminController(IDriverService driverService, IAuthApiService authService)
     {
         _driverService = driverService;
+        _authService = authService;
     }
 
+    // Pending driver verifications
     public async Task<IActionResult> Index()
     {
         List<DriverViewModel> drivers;
@@ -24,7 +27,6 @@ public class AdminController : Controller
         }
         catch
         {
-            // Free-tier: the driver service may be waking up. Don't 500 the page.
             drivers = new List<DriverViewModel>();
             ViewBag.LoadError = true;
         }
@@ -45,5 +47,37 @@ public class AdminController : Controller
             TempData["Err"] = "Could not verify the driver — the service may be waking up. Please try again.";
         }
         return RedirectToAction(nameof(Index));
+    }
+
+    // All drivers (verified + pending)
+    public async Task<IActionResult> Drivers()
+    {
+        List<DriverViewModel> drivers;
+        try
+        {
+            drivers = await _driverService.GetAllDrivers();
+        }
+        catch
+        {
+            drivers = new List<DriverViewModel>();
+            ViewBag.LoadError = true;
+        }
+        return View(drivers);
+    }
+
+    // All users (riders / drivers / admins)
+    public async Task<IActionResult> Users()
+    {
+        List<UserViewModel> users;
+        try
+        {
+            users = await _authService.GetAllUsers();
+        }
+        catch
+        {
+            users = new List<UserViewModel>();
+            ViewBag.LoadError = true;
+        }
+        return View(users);
     }
 }

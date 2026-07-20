@@ -101,8 +101,6 @@ public class BookingService {
 
         ride.setStatus(RideStatus.COMPLETED);
         ride.setEndTime(LocalDateTime.now());
-        ride.setStatus(RideStatus.COMPLETED);
-        ride.setEndTime(LocalDateTime.now());
         return rideRepository.save(ride);
     }
 

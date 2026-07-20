@@ -1,0 +1,70 @@
+@model List<admin_portal.Models.DriverViewModel>
+@{
+    ViewData["Title"] = "Drivers";
+}
+
+<div class="hwc-page-head">
+    <h1>Drivers</h1>
+    <p>All drivers on the platform — @(Model?.Count ?? 0) total.</p>
+</div>
+
+@if (ViewBag.LoadError == true)
+{
+    <div class="hwc-flash hwc-flash-err">Couldn't load drivers — the driver service may be waking up. Refresh in a moment.</div>
+}
+else if (Model == null || !Model.Any())
+{
+    <div class="hwc-empty">
+        <div class="hwc-empty-icon" style="background:#fce7f3;color:#db2777;">&#128663;</div>
+        <p>No drivers have registered yet.</p>
+    </div>
+}
+else
+{
+    <div class="hwc-table-wrap">
+        <table class="hwc-table">
+            <thead>
+                <tr><th>Driver</th><th>Contact</th><th>Gender</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var d in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="hwc-cell-user">
+                                <div class="hwc-avatar-sm">@(string.IsNullOrEmpty(d.Name) ? "D" : d.Name.Substring(0, 1).ToUpper())</div>
+                                <div>
+                                    <div class="hwc-cell-name">@d.Name</div>
+                                    <div class="hwc-cell-sub">#@d.Id</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>@d.Email</div>
+                            <div class="hwc-cell-sub">@d.PhoneNumber</div>
+                        </td>
+                        <td>@d.Gender</td>
+                        <td>
+                            @if (d.IsVerified)
+                            {
+                                <span class="hwc-badge hwc-badge-green">Verified</span>
+                            }
+                            else
+                            {
+                                <span class="hwc-badge hwc-badge-amber">Pending</span>
+                            }
+                            @if (d.IsAvailable)
+                            {
+                                <span class="hwc-badge hwc-badge-blue">Online</span>
+                            }
+                            else
+                            {
+                                <span class="hwc-badge hwc-badge-gray">Offline</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

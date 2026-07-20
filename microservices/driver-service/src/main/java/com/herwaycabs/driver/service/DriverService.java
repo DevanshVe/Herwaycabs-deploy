@@ -44,6 +44,10 @@ public class DriverService {
         return driverRepository.findByIsAvailableTrueAndIsVerifiedTrue();
     }
 
+    public List<Driver> getAllDrivers() {
+        return driverRepository.findAll();
+    }
+
     public Driver getDriverById(Long id) {
         return driverRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Driver not found"));
