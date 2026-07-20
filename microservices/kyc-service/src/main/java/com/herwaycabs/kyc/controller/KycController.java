@@ -42,4 +42,30 @@ public class KycController {
     public ResponseEntity<List<Document>> getUserDocuments(@PathVariable Long userId) {
         return ResponseEntity.ok(kycService.getUserDocuments(userId));
     }
+
+    // Admin listings
+    @GetMapping("/all")
+    public ResponseEntity<List<Document>> getAllDocuments() {
+        return ResponseEntity.ok(kycService.getAllDocuments());
+    }
+
+    @GetMapping("/pending")
+    public ResponseEntity<List<Document>> getPendingDocuments() {
+        return ResponseEntity.ok(kycService.getPendingDocuments());
+    }
+
+    // Serve the stored document bytes (for the admin viewer)
+    @GetMapping("/{documentId}/file")
+    public ResponseEntity<byte[]> getDocumentFile(@PathVariable Long documentId) {
+        Document document = kycService.getDocument(documentId);
+        byte[] data = document.getDocumentData();
+        if (data == null || data.length == 0) {
+            return ResponseEntity.notFound().build();
+        }
+        String contentType = document.getDocumentContentType() != null
+                ? document.getDocumentContentType() : "application/octet-stream";
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, contentType)
+                .body(data);
+    }
 }

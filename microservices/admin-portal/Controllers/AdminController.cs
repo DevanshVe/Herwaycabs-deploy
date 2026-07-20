@@ -11,12 +11,14 @@ public class AdminController : Controller
     private readonly IDriverService _driverService;
     private readonly IAuthApiService _authService;
     private readonly IBookingService _bookingService;
+    private readonly IKycService _kycService;
 
-    public AdminController(IDriverService driverService, IAuthApiService authService, IBookingService bookingService)
+    public AdminController(IDriverService driverService, IAuthApiService authService, IBookingService bookingService, IKycService kycService)
     {
         _driverService = driverService;
         _authService = authService;
         _bookingService = bookingService;
+        _kycService = kycService;
     }
 
     // Pending driver verifications
@@ -97,5 +99,37 @@ public class AdminController : Controller
             ViewBag.LoadError = true;
         }
         return View(rides);
+    }
+
+    // Pending KYC documents awaiting review
+    public async Task<IActionResult> Kyc()
+    {
+        List<KycDocumentViewModel> docs;
+        try
+        {
+            docs = await _kycService.GetPending();
+        }
+        catch
+        {
+            docs = new List<KycDocumentViewModel>();
+            ViewBag.LoadError = true;
+        }
+        return View(docs);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> VerifyKyc(long id, bool approved, string? notes)
+    {
+        try
+        {
+            await _kycService.Verify(id, approved, notes);
+            TempData["Msg"] = approved ? "Document approved." : "Document rejected.";
+        }
+        catch
+        {
+            TempData["Err"] = "Could not update the document — the service may be waking up. Please try again.";
+        }
+        return RedirectToAction(nameof(Kyc));
     }
 }

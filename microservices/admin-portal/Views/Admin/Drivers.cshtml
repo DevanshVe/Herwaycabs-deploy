@@ -31,6 +31,7 @@ else
         <select class="hwc-filter" data-filter="available" aria-label="Filter by availability">
             <option value="">All availability</option>
             <option value="true">Online</option>
+            <option value="trip">On trip</option>
             <option value="false">Offline</option>
         </select>
         <span class="hwc-count"><strong data-count>@Model.Count</strong> shown</span>
@@ -44,7 +45,7 @@ else
             <tbody>
                 @foreach (var d in Model)
                 {
-                    <tr data-verified="@d.IsVerified.ToString().ToLower()" data-available="@d.IsAvailable.ToString().ToLower()" data-search="@($"{d.Name} {d.Email} {d.PhoneNumber}")">
+                    <tr data-verified="@d.IsVerified.ToString().ToLower()" data-available="@(d.OnTrip ? "trip" : d.IsAvailable ? "true" : "false")" data-search="@($"{d.Name} {d.Email} {d.PhoneNumber}")">
                         <td>
                             <div class="hwc-cell-user">
                                 <div class="hwc-avatar-sm">@(string.IsNullOrEmpty(d.Name) ? "D" : d.Name.Substring(0, 1).ToUpper())</div>
@@ -68,9 +69,13 @@ else
                             {
                                 <span class="hwc-badge hwc-badge-amber">Pending</span>
                             }
-                            @if (d.IsAvailable)
+                            @if (d.OnTrip)
                             {
-                                <span class="hwc-badge hwc-badge-blue">Online</span>
+                                <span class="hwc-badge hwc-badge-blue">On trip</span>
+                            }
+                            else if (d.IsAvailable)
+                            {
+                                <span class="hwc-badge hwc-badge-green">Online</span>
                             }
                             else
                             {

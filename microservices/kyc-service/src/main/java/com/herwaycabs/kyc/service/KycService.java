@@ -9,37 +9,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class KycService {
 
     private final DocumentRepository documentRepository;
-    private final String UPLOAD_DIR = "uploads/";
 
     public Document uploadDocument(Long userId, String type, MultipartFile file) throws IOException {
-        // Create upload directory if not exists
-        Path uploadPath = Paths.get(UPLOAD_DIR);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
-
-        // Save file locally (In prod use S3/MinIO)
-        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-        Path filePath = uploadPath.resolve(fileName);
-        Files.copy(file.getInputStream(), filePath);
-
+        // Store bytes in the DB (durable) — the container filesystem is ephemeral.
         Document document = Document.builder()
                 .userId(userId)
                 .type(DocumentType.valueOf(type.toUpperCase()))
                 .status(DocumentStatus.PENDING)
-                .documentUrl(filePath.toString())
+                .documentUrl(file.getOriginalFilename())
+                .documentData(file.getBytes())
+                .documentContentType(file.getContentType() != null ? file.getContentType() : "application/octet-stream")
                 .uploadedAt(LocalDateTime.now())
                 .build();
 
@@ -59,5 +46,18 @@ public class KycService {
 
     public List<Document> getUserDocuments(Long userId) {
         return documentRepository.findByUserId(userId);
+    }
+
+    public List<Document> getAllDocuments() {
+        return documentRepository.findAll();
+    }
+
+    public List<Document> getPendingDocuments() {
+        return documentRepository.findByStatus(DocumentStatus.PENDING);
+    }
+
+    public Document getDocument(Long documentId) {
+        return documentRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
     }
 }

@@ -417,7 +417,10 @@ const RiderHome = () => {
                                 )}
 
                                 {ride.status === 'COMPLETED' && (
-                                    <button onClick={handlePayment} className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-700 shadow-lg transition">Pay ₹{Math.round(ride.fare)}</button>
+                                    <div>
+                                        <button onClick={handlePayment} className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-700 shadow-lg transition">Pay ₹{Math.round(ride.fare)}</button>
+                                        <p className="text-center text-xs text-gray-400 mt-2">Demo payment — no real charge is made.</p>
+                                    </div>
                                 )}
 
                                 {ride.status === 'PAID' && (

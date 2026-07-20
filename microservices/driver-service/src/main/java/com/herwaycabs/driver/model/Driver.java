@@ -1,5 +1,6 @@
 package com.herwaycabs.driver.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,7 +24,8 @@ public class Driver {
     private String gender;
 
     private Boolean isVerified;
-    private Boolean isAvailable;
+    private Boolean isAvailable; // driver's online/offline preference
+    private Boolean onTrip;      // currently on an active ride
 
     private Double currentLatitude;
     private Double currentLongitude;
@@ -31,7 +33,9 @@ public class Driver {
     private String documentPath; // original filename (marker that a document exists)
 
     // Document bytes stored in the DB (Neon) so they survive redeploys — the
-    // container filesystem on Render is ephemeral.
+    // container filesystem on Render is ephemeral. Not serialized in JSON
+    // responses (served raw via the /document endpoint instead).
+    @JsonIgnore
     @Column(columnDefinition = "bytea")
     private byte[] documentData;
     private String documentContentType;

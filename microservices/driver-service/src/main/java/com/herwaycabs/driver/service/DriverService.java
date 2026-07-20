@@ -29,7 +29,16 @@ public class DriverService {
     }
 
     public List<Driver> getAvailableDrivers() {
-        return driverRepository.findByIsAvailableTrueAndIsVerifiedTrue();
+        // Online, verified, and not already on a trip.
+        return driverRepository.findByIsAvailableTrueAndIsVerifiedTrue().stream()
+                .filter(d -> !Boolean.TRUE.equals(d.getOnTrip()))
+                .toList();
+    }
+
+    public Driver setOnTrip(Long driverId, Boolean onTrip) {
+        Driver driver = getDriverById(driverId);
+        driver.setOnTrip(onTrip);
+        return driverRepository.save(driver);
     }
 
     public List<Driver> getAllDrivers() {

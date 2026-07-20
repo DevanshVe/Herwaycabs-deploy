@@ -9,5 +9,6 @@ public class DriverViewModel
     public string Gender { get; set; } = string.Empty;
     public bool IsVerified { get; set; }
     public bool IsAvailable { get; set; }
+    public bool OnTrip { get; set; }
     public string? DocumentPath { get; set; }
 }

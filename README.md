@@ -27,11 +27,12 @@ A production-style, cloud-native **cab-booking platform built for women riders a
 - **Live driver tracking** — the rider sees the assigned driver move on the map with a live ETA.
 - **In‑app notifications** — a bell surfaces ride events (accepted, started, paid, rated).
 - **Ratings** — riders rate drivers (1–5 + note) after a trip; a driver's average shows on the ride card, history, and admin.
-- **Busy state** — a driver is marked unavailable while on a trip and freed when it completes or cancels.
+- **Busy state** — a driver is marked **On trip** while on a ride (excluded from matching) and freed when it completes or cancels.
+- **KYC** — users upload identity documents; admins review, approve, or reject them (documents stored durably in the DB).
 - **Women‑only** — sign‑up is gated to female users by design; drivers must be admin‑verified before going online.
 - **Accounts** — JWT auth, editable **profile**, **change password**, a **forgot/reset‑password** flow, and **KYC** document upload.
 - **Ride history** — searchable, filterable history for riders and drivers.
-- **Admin console** — driver verification plus drivers / users / rides views with search, filters & pagination.
+- **Admin console** — driver verification, **KYC review**, plus drivers / users / rides views with search, filters & pagination.
 
 ## Architecture
 
@@ -150,6 +151,9 @@ npm run dev
 | POST | `/api/drivers/register` | Driver (idempotent by email — used to self-heal the sign-up sync) |
 | POST | `/api/drivers/{id}/verify` | Driver |
 | POST | `/api/kyc/upload` | KYC |
+| GET  | `/api/kyc/pending` | KYC (admin review queue) |
+| POST | `/api/kyc/{id}/verify` | KYC (approve / reject) |
+| GET  | `/api/kyc/{id}/file` | KYC (document image) |
 
 > Registration requires `gender: "Female"` — the platform is women-only by design. Auth returns a JWT that the frontend stores and attaches (`Authorization: Bearer …`) on subsequent calls.
 

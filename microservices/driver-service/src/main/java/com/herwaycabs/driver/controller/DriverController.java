@@ -45,6 +45,14 @@ public class DriverController {
         return ResponseEntity.ok(driverService.updateAvailability(id, status));
     }
 
+    // Marks a driver on/off an active trip (called by booking-service).
+    @PostMapping("/{id}/on-trip")
+    public ResponseEntity<Driver> setOnTrip(
+            @PathVariable Long id,
+            @RequestParam Boolean status) {
+        return ResponseEntity.ok(driverService.setOnTrip(id, status));
+    }
+
     // Backdoor for verifying/creating driver
     @PostMapping("/register")
     public ResponseEntity<Driver> registerDriver(@RequestBody Driver driver) {

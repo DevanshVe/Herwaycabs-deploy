@@ -91,7 +91,7 @@ public class BookingService {
         ride.setDriverId(driverId);
         ride.setStatus(RideStatus.DRIVER_ASSIGNED);
         Ride saved = rideRepository.save(ride);
-        setDriverAvailability(driverId, false); // busy while on this trip
+        setDriverOnTrip(driverId, true); // busy while on this trip
         return saved;
     }
 
@@ -115,7 +115,7 @@ public class BookingService {
         ride.setStatus(RideStatus.COMPLETED);
         ride.setEndTime(LocalDateTime.now());
         Ride saved = rideRepository.save(ride);
-        setDriverAvailability(ride.getDriverId(), true); // free to take new rides
+        setDriverOnTrip(ride.getDriverId(), false); // free to take new rides
         return saved;
     }
 
@@ -131,7 +131,7 @@ public class BookingService {
                 .orElseThrow(() -> new RuntimeException("Ride not found"));
         ride.setStatus(RideStatus.CANCELLED);
         Ride saved = rideRepository.save(ride);
-        setDriverAvailability(ride.getDriverId(), true); // free the driver if one was assigned
+        setDriverOnTrip(ride.getDriverId(), false); // free the driver if one was assigned
         return saved;
     }
 
@@ -184,14 +184,14 @@ public class BookingService {
         }
     }
 
-    // Best-effort flip of a driver's availability in driver-service. Never lets
+    // Best-effort flip of a driver's on-trip flag in driver-service. Never lets
     // a driver-service hiccup break the ride flow.
-    private void setDriverAvailability(Long driverId, boolean available) {
+    private void setDriverOnTrip(Long driverId, boolean onTrip) {
         if (driverId == null) return;
         try {
-            driverServiceClient.updateAvailability(driverId, available);
+            driverServiceClient.updateOnTrip(driverId, onTrip);
         } catch (Exception e) {
-            System.err.println("Could not update driver availability: " + e.getMessage());
+            System.err.println("Could not update driver on-trip status: " + e.getMessage());
         }
     }
 }

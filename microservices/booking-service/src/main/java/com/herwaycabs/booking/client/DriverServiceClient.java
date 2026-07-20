@@ -18,7 +18,7 @@ public interface DriverServiceClient {
     @GetMapping("/api/drivers/{id}")
     DriverDto getDriverById(@PathVariable("id") Long id);
 
-    // Flip a driver busy (false) while on a trip, available (true) when free.
-    @PostMapping("/api/drivers/{id}/availability")
-    DriverDto updateAvailability(@PathVariable("id") Long id, @RequestParam("status") Boolean status);
+    // Flag a driver on (true) / off (false) an active trip.
+    @PostMapping("/api/drivers/{id}/on-trip")
+    DriverDto updateOnTrip(@PathVariable("id") Long id, @RequestParam("status") Boolean status);
 }

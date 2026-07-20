@@ -1,0 +1,84 @@
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+@model List<admin_portal.Models.KycDocumentViewModel>
+@{
+    ViewData["Title"] = "KYC Review";
+    var gateway = Configuration["ApiSettings:GatewayUrl"];
+    string TypeLabel(string? t) => (t ?? "").ToUpper() switch
+    {
+        "DRIVING_LICENSE" => "Driving License",
+        "AADHAAR_CARD" => "Aadhaar Card",
+        "PAN_CARD" => "PAN Card",
+        "VEHICLE_REGISTRATION" => "Vehicle Registration",
+        _ => t ?? "Document"
+    };
+}
+
+<div class="hwc-hero-band">
+    <div>
+        <h1>KYC Review</h1>
+        <p>Approve or reject identity documents submitted by users.</p>
+    </div>
+    <div class="hwc-hero-stat">
+        <span class="hwc-hero-num">@(Model?.Count ?? 0)</span>
+        <span class="hwc-hero-label">Pending</span>
+    </div>
+</div>
+
+@if (TempData["Msg"] != null)
+{
+    <div class="hwc-flash hwc-flash-ok">@TempData["Msg"]</div>
+}
+@if (TempData["Err"] != null)
+{
+    <div class="hwc-flash hwc-flash-err">@TempData["Err"]</div>
+}
+
+@if (ViewBag.LoadError == true)
+{
+    <div class="hwc-flash hwc-flash-err">Couldn't load documents — the KYC service may be waking up. Refresh in a moment.</div>
+}
+else if (Model == null || !Model.Any())
+{
+    <div class="hwc-empty">
+        <div class="hwc-empty-icon">&#10003;</div>
+        <p>All caught up — no documents pending review.</p>
+    </div>
+}
+else
+{
+    <div class="hwc-grid">
+        @foreach (var d in Model)
+        {
+            <div class="hwc-card">
+                <div class="hwc-card-top">
+                    <div class="hwc-avatar">&#128196;</div>
+                    <div>
+                        <div class="hwc-card-name">@TypeLabel(d.Type)</div>
+                        <div class="hwc-card-id">User #@d.UserId &middot; Doc #@d.Id</div>
+                    </div>
+                </div>
+
+                <dl class="hwc-meta">
+                    <div><dt>Uploaded</dt><dd>@(d.UploadedAt?.ToString("dd MMM yyyy, HH:mm") ?? "—")</dd></div>
+                    <div><dt>Status</dt><dd>@d.Status</dd></div>
+                </dl>
+
+                <a href="@gateway/kyc/@d.Id/file" target="_blank" rel="noopener" class="hwc-btn-outline" style="display:block;text-align:center;margin-bottom:.75rem;">View Document</a>
+
+                <div class="hwc-card-actions">
+                    <form asp-action="VerifyKyc" method="post" class="hwc-verify-form">
+                        <input type="hidden" name="id" value="@d.Id" />
+                        <input type="hidden" name="approved" value="true" />
+                        <button type="submit" class="hwc-btn">Approve</button>
+                    </form>
+                    <form asp-action="VerifyKyc" method="post" class="hwc-verify-form">
+                        <input type="hidden" name="id" value="@d.Id" />
+                        <input type="hidden" name="approved" value="false" />
+                        <button type="submit" class="hwc-btn-outline" style="width:100%;">Reject</button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+}
