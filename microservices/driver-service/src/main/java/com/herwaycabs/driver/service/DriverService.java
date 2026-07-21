@@ -43,6 +43,13 @@ public class DriverService {
         return driverRepository.save(driver);
     }
 
+    public Driver updateVehicle(Long driverId, String model, String number) {
+        Driver driver = getDriverById(driverId);
+        driver.setVehicleModel(model);
+        driver.setVehicleNumber(number);
+        return driverRepository.save(driver);
+    }
+
     public List<Driver> getAllDrivers() {
         return driverRepository.findAll();
     }

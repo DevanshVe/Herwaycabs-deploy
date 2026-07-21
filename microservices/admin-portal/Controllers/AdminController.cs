@@ -12,13 +12,15 @@ public class AdminController : Controller
     private readonly IAuthApiService _authService;
     private readonly IBookingService _bookingService;
     private readonly IKycService _kycService;
+    private readonly ISafetyService _safetyService;
 
-    public AdminController(IDriverService driverService, IAuthApiService authService, IBookingService bookingService, IKycService kycService)
+    public AdminController(IDriverService driverService, IAuthApiService authService, IBookingService bookingService, IKycService kycService, ISafetyService safetyService)
     {
         _driverService = driverService;
         _authService = authService;
         _bookingService = bookingService;
         _kycService = kycService;
+        _safetyService = safetyService;
     }
 
     // Pending driver verifications
@@ -131,5 +133,37 @@ public class AdminController : Controller
             TempData["Err"] = "Could not update the document — the service may be waking up. Please try again.";
         }
         return RedirectToAction(nameof(Kyc));
+    }
+
+    // Active SOS alerts
+    public async Task<IActionResult> Sos()
+    {
+        List<SosEventViewModel> alerts;
+        try
+        {
+            alerts = await _safetyService.GetActiveSos();
+        }
+        catch
+        {
+            alerts = new List<SosEventViewModel>();
+            ViewBag.LoadError = true;
+        }
+        return View(alerts);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResolveSos(long id)
+    {
+        try
+        {
+            await _safetyService.ResolveSos(id);
+            TempData["Msg"] = "SOS marked as resolved.";
+        }
+        catch
+        {
+            TempData["Err"] = "Could not resolve the alert. Please try again.";
+        }
+        return RedirectToAction(nameof(Sos));
     }
 }

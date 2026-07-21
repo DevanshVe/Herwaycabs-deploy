@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { authService, kycService } from '../services/api';
+import { authService, kycService, safetyService, driverService } from '../services/api';
 import Toast from '../components/Toast';
 import Logo from '../components/Logo';
 
@@ -40,6 +40,16 @@ const Profile = () => {
     const [docFile, setDocFile] = useState(null);
     const [uploadingDoc, setUploadingDoc] = useState(false);
 
+    // Trusted contacts
+    const [contacts, setContacts] = useState([]);
+    const [contactForm, setContactForm] = useState({ name: '', phone: '', email: '', relationship: '' });
+    const [savingContact, setSavingContact] = useState(false);
+
+    // Vehicle (drivers)
+    const [vehicleModel, setVehicleModel] = useState('');
+    const [vehicleNumber, setVehicleNumber] = useState('');
+    const [savingVehicle, setSavingVehicle] = useState(false);
+
     const initial = (user?.name || 'U').charAt(0).toUpperCase();
 
     const loadDocs = () => {
@@ -47,6 +57,53 @@ const Profile = () => {
         kycService.getUserDocuments(user.id).then(setDocs).catch(() => { });
     };
     useEffect(loadDocs, [user?.id]);
+
+    const loadContacts = () => {
+        if (!user?.id) return;
+        safetyService.getContacts(user.id).then(setContacts).catch(() => { });
+    };
+    useEffect(loadContacts, [user?.id]);
+
+    useEffect(() => {
+        if (user?.role === 'DRIVER' && user?.id) {
+            driverService.getDriverById(user.id).then((d) => {
+                setVehicleModel(d.vehicleModel || '');
+                setVehicleNumber(d.vehicleNumber || '');
+            }).catch(() => { });
+        }
+    }, [user?.id, user?.role]);
+
+    const addContact = async (e) => {
+        e.preventDefault();
+        if (!contactForm.name.trim() || !contactForm.phone.trim()) {
+            setNotice({ type: 'error', message: 'Please enter at least a name and phone number.' }); return;
+        }
+        setSavingContact(true);
+        try {
+            await safetyService.addContact(user.id, contactForm);
+            setContactForm({ name: '', phone: '', email: '', relationship: '' });
+            setNotice({ type: 'success', message: 'Trusted contact added.' });
+            loadContacts();
+        } catch {
+            setNotice({ type: 'error', message: 'Could not add the contact. Please try again.' });
+        } finally { setSavingContact(false); }
+    };
+
+    const removeContact = async (id) => {
+        try { await safetyService.deleteContact(user.id, id); loadContacts(); }
+        catch { setNotice({ type: 'error', message: 'Could not remove the contact.' }); }
+    };
+
+    const saveVehicle = async (e) => {
+        e.preventDefault();
+        setSavingVehicle(true);
+        try {
+            await driverService.updateVehicle(user.id, vehicleModel.trim(), vehicleNumber.trim());
+            setNotice({ type: 'success', message: 'Vehicle details saved.' });
+        } catch {
+            setNotice({ type: 'error', message: 'Could not save vehicle details.' });
+        } finally { setSavingVehicle(false); }
+    };
 
     const uploadDoc = async (e) => {
         e.preventDefault();
@@ -183,6 +240,71 @@ const Profile = () => {
                         </button>
                     </div>
                 </form>
+
+                {/* Vehicle details (drivers) */}
+                {user?.role === 'DRIVER' && (
+                    <form onSubmit={saveVehicle} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-900">Vehicle details</h2>
+                            <p className="text-sm text-gray-500">Shown to riders as a trust signal.</p>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-600 mb-1">Model</label>
+                                <input type="text" value={vehicleModel} onChange={(e) => setVehicleModel(e.target.value)} placeholder="e.g. Maruti Swift"
+                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-600 mb-1">Number plate</label>
+                                <input type="text" value={vehicleNumber} onChange={(e) => setVehicleNumber(e.target.value)} placeholder="e.g. MH 12 AB 1234"
+                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+                            </div>
+                        </div>
+                        <div className="flex justify-end">
+                            <button type="submit" disabled={savingVehicle}
+                                className="px-6 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-accent transition disabled:opacity-60">
+                                {savingVehicle ? 'Saving…' : 'Save vehicle'}
+                            </button>
+                        </div>
+                    </form>
+                )}
+
+                {/* Trusted contacts */}
+                <div className="bg-white rounded-2xl shadow-sm border border-pink-100 p-6 space-y-4">
+                    <div>
+                        <h2 className="text-lg font-bold text-gray-900">Trusted contacts</h2>
+                        <p className="text-sm text-gray-500">People to notify if you raise an SOS or share a ride.</p>
+                    </div>
+                    {contacts.length > 0 && (
+                        <ul className="space-y-2">
+                            {contacts.map((c) => (
+                                <li key={c.id} className="flex items-center justify-between gap-3 border border-gray-100 rounded-xl p-3">
+                                    <div className="min-w-0">
+                                        <p className="font-semibold text-gray-800 text-sm">{c.name}{c.relationship ? <span className="text-gray-400 font-normal"> · {c.relationship}</span> : null}</p>
+                                        <p className="text-xs text-gray-500 truncate">{c.phone}{c.email ? ` · ${c.email}` : ''}</p>
+                                    </div>
+                                    <button onClick={() => removeContact(c.id)} className="text-red-500 text-sm font-semibold hover:underline shrink-0">Remove</button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                    <form onSubmit={addContact} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <input type="text" value={contactForm.name} onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })} placeholder="Name"
+                            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+                        <input type="tel" value={contactForm.phone} onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })} placeholder="Phone"
+                            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+                        <input type="email" value={contactForm.email} onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })} placeholder="Email (optional)"
+                            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+                        <input type="text" value={contactForm.relationship} onChange={(e) => setContactForm({ ...contactForm, relationship: e.target.value })} placeholder="Relationship (optional)"
+                            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+                        <div className="sm:col-span-2 flex justify-end">
+                            <button type="submit" disabled={savingContact}
+                                className="px-6 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-accent transition disabled:opacity-60">
+                                {savingContact ? 'Adding…' : 'Add contact'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
 
                 {/* KYC documents */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">

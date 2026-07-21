@@ -102,6 +102,8 @@ body {
 .hwc-tabs a { color: var(--hwc-muted); font-weight: 600; text-decoration: none; padding: .4rem .8rem; border-radius: .6rem; font-size: .9rem; transition: color .15s, background .15s; }
 .hwc-tabs a:hover { color: var(--hwc-primary); background: #fdf2f8; }
 .hwc-tabs a.active { color: var(--hwc-primary); background: #fce7f3; }
+.hwc-tabs a.hwc-tab-sos { color: #dc2626; font-weight: 700; }
+.hwc-tabs a.hwc-tab-sos:hover, .hwc-tabs a.hwc-tab-sos.active { color: #dc2626; background: #fef2f2; }
 
 /* Narrow screens: let the bar wrap, keep just the avatar */
 @media (max-width: 680px) {

@@ -142,6 +142,11 @@ export const driverService = {
         return response.data;
     },
 
+    updateVehicle: async (id, vehicleModel, vehicleNumber) => {
+        const response = await api.post(`/drivers/${id}/vehicle`, { vehicleModel, vehicleNumber });
+        return response.data;
+    },
+
     // Idempotent (matches by email in driver-service). Used to guarantee a
     // driver record exists even if the auth->driver sync failed at sign-up.
     registerDriver: async (driver) => {
@@ -227,6 +232,38 @@ export const kycService = {
 
     getUserDocuments: async (userId) => {
         const response = await api.get(`/kyc/user/${userId}`);
+        return response.data;
+    },
+};
+
+export const safetyService = {
+    getContacts: async (userId) => {
+        const response = await api.get("/safety/contacts", { headers: { "X-User-Id": userId } });
+        return response.data;
+    },
+    addContact: async (userId, contact) => {
+        const response = await api.post("/safety/contacts", contact, { headers: { "X-User-Id": userId } });
+        return response.data;
+    },
+    deleteContact: async (userId, id) => {
+        await api.delete(`/safety/contacts/${id}`, { headers: { "X-User-Id": userId } });
+    },
+    raiseSos: async (userId, payload) => {
+        const response = await api.post("/safety/sos", payload, { headers: { "X-User-Id": userId } });
+        return response.data;
+    },
+    // Public — no auth required
+    getTrack: async (token) => {
+        const response = await api.get(`/safety/track/${token}`);
+        return response.data;
+    },
+    // Admin
+    getActiveSos: async () => {
+        const response = await api.get("/safety/sos/active");
+        return response.data;
+    },
+    resolveSos: async (id) => {
+        const response = await api.post(`/safety/sos/${id}/resolve`);
         return response.data;
     },
 };

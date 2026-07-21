@@ -30,9 +30,10 @@ A production-style, cloud-native **cab-booking platform built for women riders a
 - **Busy state** — a driver is marked **On trip** while on a ride (excluded from matching) and freed when it completes or cancels.
 - **KYC** — users upload identity documents; admins review, approve, or reject them (documents stored durably in the DB).
 - **Women‑only** — sign‑up is gated to female users by design; drivers must be admin‑verified before going online.
+- **Women‑safety** — one‑tap **SOS** (live location alerted to the safety team), **Share‑My‑Ride** public tracking link, **Trusted Contacts**, driver **verified badge + vehicle details**, and a "reached safely?" check‑in.
 - **Accounts** — JWT auth, editable **profile**, **change password**, a **forgot/reset‑password** flow, and **KYC** document upload.
 - **Ride history** — searchable, filterable history for riders and drivers.
-- **Admin console** — driver verification, **KYC review**, plus drivers / users / rides views with search, filters & pagination.
+- **Admin console** — driver verification, **KYC review**, **SOS alerts**, plus drivers / users / rides views with search, filters & pagination.
 
 ## Architecture
 
@@ -164,6 +165,10 @@ npm run dev
 | GET  | `/api/bookings/my-rides` | Booking (a rider's / driver's own ride history) |
 | POST | `/api/bookings/{id}/rate` | Booking (rider rates the driver, 1–5 + note) |
 | GET  | `/api/bookings/driver/{id}/rating` | Booking (a driver's average rating) |
+| POST | `/api/safety/sos` | Safety (raise an SOS) |
+| GET  | `/api/safety/sos/active` | Safety (admin SOS queue) |
+| GET/POST/DELETE | `/api/safety/contacts` | Safety (trusted contacts) |
+| GET  | `/api/safety/track/{token}` | Safety (**public** live ride tracking) |
 | GET  | `/api/drivers` | Driver (all drivers) |
 | GET  | `/api/drivers/available` | Driver |
 | GET  | `/api/drivers/pending` | Driver |

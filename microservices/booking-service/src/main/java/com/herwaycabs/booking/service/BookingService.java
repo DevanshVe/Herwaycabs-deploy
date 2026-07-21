@@ -57,6 +57,7 @@ public class BookingService {
                 .fare(fare)
                 .requestTime(LocalDateTime.now())
                 .otp(String.format("%04d", new Random().nextInt(10000)))
+                .shareToken(java.util.UUID.randomUUID().toString().replace("-", ""))
                 .build();
 
         Ride savedRide = rideRepository.save(ride);

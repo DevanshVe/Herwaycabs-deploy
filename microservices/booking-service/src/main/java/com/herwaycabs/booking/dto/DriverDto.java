@@ -17,4 +17,6 @@ public class DriverDto {
     private Boolean isAvailable;
     private Double currentLatitude;
     private Double currentLongitude;
+    private String vehicleModel;
+    private String vehicleNumber;
 }

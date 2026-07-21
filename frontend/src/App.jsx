@@ -8,6 +8,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import Profile from './pages/Profile';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import TrackRide from './pages/TrackRide';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/track/:token" element={<TrackRide />} />
 
       {/* Protected Routes */}
       <Route element={<ProtectedRoute allowedRoles={['RIDER']} />}>

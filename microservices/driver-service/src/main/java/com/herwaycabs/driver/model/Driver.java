@@ -39,4 +39,8 @@ public class Driver {
     @Column(columnDefinition = "bytea")
     private byte[] documentData;
     private String documentContentType;
+
+    // Vehicle details (trust signal shown to riders).
+    private String vehicleModel;
+    private String vehicleNumber;
 }

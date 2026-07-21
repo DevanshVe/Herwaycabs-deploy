@@ -4,7 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, ZoomControl, Polyline, useMap }
 import 'leaflet/dist/leaflet.css';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
-import { bookingService, driverService } from '../services/api';
+import { bookingService, driverService, safetyService } from '../services/api';
 import Toast from '../components/Toast';
 import RideHistoryModal from '../components/RideHistoryModal';
 import Logo from '../components/Logo';
@@ -134,6 +134,31 @@ const RiderHome = () => {
         })();
         return () => { cancelled = true; };
     }, [ride?.id, pickupCoords, dropCoords]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const handleSos = async () => {
+        if (!ride) return;
+        if (!window.confirm('Raise an SOS? Your live location and ride details will be sent to the safety team.')) return;
+        const send = (lat, lng) => {
+            safetyService.raiseSos(user.id, { rideId: ride.id, latitude: lat, longitude: lng, note: 'Rider raised SOS from the app' })
+                .then(() => { setNotice({ type: 'error', message: 'SOS sent — your location and ride details were alerted to the safety team.' }); notify('🚨 SOS raised — help is being notified', 'error'); })
+                .catch(() => setNotice({ type: 'error', message: 'Could not send SOS. Please call your local emergency number.' }));
+        };
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => send(pos.coords.latitude, pos.coords.longitude),
+                () => send(currentPosition[0], currentPosition[1])
+            );
+        } else { send(currentPosition[0], currentPosition[1]); }
+    };
+
+    const handleShare = async () => {
+        if (!ride?.shareToken) return;
+        const url = `${window.location.origin}/track/${ride.shareToken}`;
+        try {
+            if (navigator.share) { await navigator.share({ title: 'Track my HerWayCabs ride', text: 'Follow my ride live', url }); }
+            else { await navigator.clipboard.writeText(url); setNotice({ type: 'success', message: 'Tracking link copied — share it with someone you trust.' }); }
+        } catch { /* user dismissed the share sheet */ }
+    };
 
     const submitRating = async () => {
         if (ratingValue < 1) { setNotice({ type: 'error', message: 'Please pick a star rating first.' }); return; }
@@ -340,6 +365,15 @@ const RiderHome = () => {
                     </svg>
                 </button>
 
+                {/* Emergency SOS — visible during an active ride */}
+                {ride && !['PAID', 'CANCELLED'].includes(ride.status) && (
+                    <button onClick={handleSos} title="Emergency SOS"
+                        className="absolute bottom-6 left-4 z-[1200] flex items-center gap-2 bg-red-600 text-white font-extrabold px-5 py-3 rounded-full shadow-2xl hover:bg-red-700 transition animate-pulse">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+                        SOS
+                    </button>
+                )}
+
                 {/* Booking Panel */}
                 <div className="absolute top-24 left-4 bg-white/95 backdrop-blur shadow-2xl rounded-2xl z-[1000] w-[22rem] max-w-[90vw] overflow-hidden border border-pink-100">
                     <div className="p-6">
@@ -410,8 +444,14 @@ const RiderHome = () => {
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">{assignedDriver.name?.charAt(0) || 'D'}</div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-bold text-gray-900 truncate">{assignedDriver.name}</p>
+                                                <p className="text-sm font-bold text-gray-900 truncate">
+                                                    {assignedDriver.name}
+                                                    {assignedDriver.isVerified && <span className="ml-1.5 text-[11px] font-bold text-green-600">✓ Verified</span>}
+                                                </p>
                                                 <p className="text-xs text-gray-500">Your driver{assignedDriver.phoneNumber ? ` · ${assignedDriver.phoneNumber}` : ''}</p>
+                                                {(assignedDriver.vehicleModel || assignedDriver.vehicleNumber) && (
+                                                    <p className="text-xs text-gray-700 font-semibold">{assignedDriver.vehicleModel}{assignedDriver.vehicleNumber ? ` · ${assignedDriver.vehicleNumber}` : ''}</p>
+                                                )}
                                                 {driverRatingInfo && (
                                                     <p className="text-xs font-bold text-yellow-600 mt-0.5">
                                                         {driverRatingInfo.count > 0 ? `★ ${driverRatingInfo.average} · ${driverRatingInfo.count} trip${driverRatingInfo.count === 1 ? '' : 's'}` : '★ New driver'}
@@ -438,6 +478,14 @@ const RiderHome = () => {
                                     <div><p className="text-xs text-gray-500 uppercase font-bold">From</p><p className="font-medium text-gray-900">{ride.pickupLocation}</p></div>
                                     <div><p className="text-xs text-gray-500 uppercase font-bold">To</p><p className="font-medium text-gray-900">{ride.dropLocation}</p></div>
                                 </div>
+
+                                {!['PAID', 'CANCELLED'].includes(ride.status) && (
+                                    <button onClick={handleShare} type="button"
+                                        className="w-full flex items-center justify-center gap-2 bg-pink-50 text-primary border border-pink-200 py-2.5 rounded-xl font-bold hover:bg-pink-100 transition">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+                                        Share my ride
+                                    </button>
+                                )}
 
                                 <div className="bg-gray-50 p-4 rounded-xl flex justify-between items-center">
                                     <div><p className="text-xs text-gray-500 uppercase font-bold">Fare · {ride.cabType === 'LUXURY' ? 'Luxury' : 'Economy'}</p><p className="text-xl font-bold text-gray-900">₹{Math.round(ride.fare)}</p></div>
@@ -488,6 +536,13 @@ const RiderHome = () => {
                                                 </button>
                                             </div>
                                         )}
+
+                                        <div className="flex items-center justify-center gap-2 mb-3 text-sm">
+                                            <span className="text-gray-500">Did you reach safely?</span>
+                                            <button onClick={() => notify('Glad you reached safely 💗', 'success')} className="font-bold text-green-600 hover:underline">Yes</button>
+                                            <span className="text-gray-300">·</span>
+                                            <button onClick={handleSos} className="font-bold text-red-600 hover:underline">No, get help</button>
+                                        </div>
 
                                         <button onClick={startFresh} className="text-sm font-bold text-primary hover:underline">Book another ride</button>
                                     </div>

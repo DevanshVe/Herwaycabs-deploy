@@ -53,6 +53,14 @@ public class DriverController {
         return ResponseEntity.ok(driverService.setOnTrip(id, status));
     }
 
+    // Driver sets/updates their vehicle details.
+    @PostMapping("/{id}/vehicle")
+    public ResponseEntity<Driver> updateVehicle(
+            @PathVariable Long id,
+            @RequestBody com.herwaycabs.driver.dto.VehicleDto dto) {
+        return ResponseEntity.ok(driverService.updateVehicle(id, dto.getVehicleModel(), dto.getVehicleNumber()));
+    }
+
     // Backdoor for verifying/creating driver
     @PostMapping("/register")
     public ResponseEntity<Driver> registerDriver(@RequestBody Driver driver) {

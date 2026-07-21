@@ -47,4 +47,7 @@ public class Ride {
     // Rider's rating of the driver for this ride (1-5) + optional note.
     private Integer driverRating;
     private String driverFeedback;
+
+    // Unguessable token for the public "share my ride" tracking link.
+    private String shareToken;
 }

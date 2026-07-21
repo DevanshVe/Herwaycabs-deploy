@@ -1,0 +1,76 @@
+@model List<admin_portal.Models.SosEventViewModel>
+@{
+    ViewData["Title"] = "SOS Alerts";
+}
+
+<div class="hwc-hero-band" style="background:linear-gradient(135deg,#dc2626,#991b1b);">
+    <div>
+        <h1>SOS Alerts</h1>
+        <p>Active emergency alerts raised by riders.</p>
+    </div>
+    <div class="hwc-hero-stat">
+        <span class="hwc-hero-num">@(Model?.Count ?? 0)</span>
+        <span class="hwc-hero-label">Active</span>
+    </div>
+</div>
+
+@if (TempData["Msg"] != null)
+{
+    <div class="hwc-flash hwc-flash-ok">@TempData["Msg"]</div>
+}
+@if (TempData["Err"] != null)
+{
+    <div class="hwc-flash hwc-flash-err">@TempData["Err"]</div>
+}
+
+@if (ViewBag.LoadError == true)
+{
+    <div class="hwc-flash hwc-flash-err">Couldn't load alerts — the service may be waking up. Refresh in a moment.</div>
+}
+else if (Model == null || !Model.Any())
+{
+    <div class="hwc-empty">
+        <div class="hwc-empty-icon">&#10003;</div>
+        <p>No active SOS alerts. All riders are safe.</p>
+    </div>
+}
+else
+{
+    <div class="hwc-grid">
+        @foreach (var s in Model)
+        {
+            <div class="hwc-card" style="border-color:#fecaca;">
+                <div class="hwc-card-top">
+                    <div class="hwc-avatar" style="background:linear-gradient(135deg,#ef4444,#b91c1c);">&#9888;</div>
+                    <div>
+                        <div class="hwc-card-name">SOS #@s.Id</div>
+                        <div class="hwc-card-id">Rider #@(s.UserId?.ToString() ?? "?") &middot; Ride #@(s.RideId?.ToString() ?? "—")</div>
+                    </div>
+                </div>
+
+                <dl class="hwc-meta">
+                    <div><dt>Raised</dt><dd>@(s.CreatedAt?.ToString("dd MMM yyyy, HH:mm") ?? "—")</dd></div>
+                    @if (!string.IsNullOrEmpty(s.Note))
+                    {
+                        <div><dt>Note</dt><dd>@s.Note</dd></div>
+                    }
+                </dl>
+
+                <div class="hwc-card-actions">
+                    @if (s.Latitude.HasValue && s.Longitude.HasValue)
+                    {
+                        <a href="@($"https://www.google.com/maps?q={s.Latitude},{s.Longitude}")" target="_blank" rel="noopener" class="hwc-btn-outline">View location</a>
+                    }
+                    else
+                    {
+                        <span class="hwc-nodoc">No location</span>
+                    }
+                    <form asp-action="ResolveSos" method="post" class="hwc-verify-form">
+                        <input type="hidden" name="id" value="@s.Id" />
+                        <button type="submit" class="hwc-btn">Resolve</button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+}

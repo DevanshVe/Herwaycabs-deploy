@@ -1,0 +1,15 @@
+package com.herwaycabs.booking.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class SosRequest {
+    private Long rideId;
+    private Double latitude;
+    private Double longitude;
+    private String note;
+}
